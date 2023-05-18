@@ -1,5 +1,6 @@
 import 'package:admin/ScanScreen/scan_ap.dart';
 import 'package:flutter/material.dart';
+import 'package:wifi_scan/wifi_scan.dart';
 
 class ScanScreen extends StatefulWidget {
   static Map<String, int> apMap = {};
@@ -15,6 +16,40 @@ class _ScanScreenState extends State<ScanScreen> {
     fontWeight: FontWeight.bold,
   );
 
+  List<WiFiAccessPoint> accessPoints = <WiFiAccessPoint>[];
+  late bool isLoading = false;
+  late bool isScanSuccess = false;
+
+  List<WiFiAccessPoint> getSortedAPs(List<WiFiAccessPoint> accessPoints) {
+    accessPoints.sort((a, b) => a.level.compareTo(b.level));
+    return accessPoints.reversed.toList();
+  }
+
+  Future<bool> getScanResult(BuildContext context) async {
+    setState(() {
+      isLoading = true;
+    });
+
+    var canScan =
+        await WiFiScan.instance.canStartScan(); // check if can-startScan
+    if (canScan != CanStartScan.yes) {
+      return false;
+    } // if can-not, then show error
+    await WiFiScan.instance.startScan(); // call startScan API
+    var canGetResult = await WiFiScan.instance
+        .canGetScannedResults(); // check if can-getScannedResults
+    if (canGetResult != CanGetScannedResults.yes) {
+      return false;
+    } // if can-not, then show error
+    final results = await WiFiScan.instance.getScannedResults();
+    setState(() {
+      isLoading = false;
+      accessPoints = results;
+    });
+
+    return true;
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -25,18 +60,30 @@ class _ScanScreenState extends State<ScanScreen> {
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             Expanded(
-              flex: 8,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: const [
-                  ApInfo(
-                    ssid: "Gachon_Free_Wifi",
-                    bssid: "AB::CD::EE::45",
-                    dbm: -36,
-                  )
-                ],
-              ),
-            ),
+                flex: 8,
+                child: isLoading
+                    ? const Center(
+                        child: CircularProgressIndicator(
+                          color: Colors.white,
+                        ),
+                      )
+                    : isScanSuccess
+                        ? ListView.separated(
+                            scrollDirection: Axis.vertical,
+                            itemCount: accessPoints.length,
+                            itemBuilder: (context, index) {
+                              return ApInfo(
+                                ssid: getSortedAPs(accessPoints)[index].ssid,
+                                bssid: getSortedAPs(accessPoints)[index].bssid,
+                                dbm: getSortedAPs(accessPoints)[index].level,
+                              );
+                            },
+                            separatorBuilder: (context, index) =>
+                                const SizedBox(height: 7),
+                          )
+                        : const Center(
+                            child: Text("No Scan Results"),
+                          )),
             Expanded(
               flex: 1,
               child: Row(
@@ -54,7 +101,10 @@ class _ScanScreenState extends State<ScanScreen> {
                         borderRadius: BorderRadius.circular(40),
                       ),
                     ),
-                    onPressed: () {},
+                    onPressed: () async {
+                      isScanSuccess = await getScanResult(context);
+                      setState(() {});
+                    },
                     child: Text("Scan", style: _textStyle),
                   ),
                   ElevatedButton(

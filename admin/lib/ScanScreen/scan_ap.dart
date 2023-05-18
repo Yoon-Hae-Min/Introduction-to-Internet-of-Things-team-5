@@ -17,10 +17,9 @@ class ApInfo extends StatefulWidget {
 
 class _ApInfoState extends State<ApInfo> {
   IconData setIconData() {
-    if (widget.dbm < -90) return Icons.wifi_1_bar_rounded;
-    if (widget.dbm <= -30 && widget.dbm >= -60) return Icons.wifi_2_bar_rounded;
-    if (widget.dbm > -30) return Icons.wifi;
-
+    if (widget.dbm < -70) return Icons.wifi_1_bar_rounded;
+    if (widget.dbm <= -50 && widget.dbm >= -70) return Icons.wifi_2_bar_rounded;
+    if (widget.dbm > -50) return Icons.wifi;
     return Icons.question_mark;
   }
 
