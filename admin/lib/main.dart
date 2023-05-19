@@ -14,14 +14,17 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
         debugShowCheckedModeBanner: false,
         home: Scaffold(
-            appBar: AppBar(
-              centerTitle: true,
-              title: const Text(
-                "Admin",
-                style:
-                    TextStyle(color: Colors.white, fontWeight: FontWeight.w700),
+            appBar: PreferredSize(
+              preferredSize: const Size.fromHeight(50),
+              child: AppBar(
+                centerTitle: true,
+                title: const Text(
+                  "Admin",
+                  style: TextStyle(
+                      color: Colors.white, fontWeight: FontWeight.w700),
+                ),
+                backgroundColor: Colors.blueGrey.shade300,
               ),
-              backgroundColor: Colors.blueGrey.shade300,
             ),
             body: const ScanScreen()));
   }

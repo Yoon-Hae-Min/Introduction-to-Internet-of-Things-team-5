@@ -4,6 +4,7 @@ import 'package:wifi_scan/wifi_scan.dart';
 
 class ScanScreen extends StatefulWidget {
   static Map<String, int> apMap = {};
+  static int pushStringNum = 0;
   const ScanScreen({super.key});
 
   @override
@@ -23,6 +24,25 @@ class _ScanScreenState extends State<ScanScreen> {
   List<WiFiAccessPoint> getSortedAPs(List<WiFiAccessPoint> accessPoints) {
     accessPoints.sort((a, b) => a.level.compareTo(b.level));
     return accessPoints.reversed.toList();
+  }
+
+  //Function to send only information of ap detected in scan
+  String pushString() {
+    late String pushAPs = "";
+    late List<String> compareString = [];
+    ScanScreen.pushStringNum = 0;
+
+    for (int i = 0; i < accessPoints.length; i++) {
+      compareString.add("${accessPoints[i].ssid} ${accessPoints[i].bssid}");
+    }
+    ScanScreen.apMap.forEach((key, value) {
+      if (compareString.contains(key)) {
+        pushAPs += '$key : $value\n';
+        ScanScreen.pushStringNum++;
+      }
+    });
+
+    return pushAPs;
   }
 
   Future<bool> getScanResult(BuildContext context) async {
@@ -118,10 +138,6 @@ class _ScanScreenState extends State<ScanScreen> {
                         ),
                       ),
                       onPressed: () {
-                        late String pushAPs = "";
-                        ScanScreen.apMap.forEach((key, value) {
-                          pushAPs += '$key : $value\n';
-                        });
                         showDialog(
                             context: context,
                             barrierDismissible: true,
@@ -145,7 +161,7 @@ class _ScanScreenState extends State<ScanScreen> {
                                           child: Column(
                                             children: [
                                               Text(
-                                                pushAPs,
+                                                pushString(),
                                                 style: const TextStyle(
                                                     fontSize: 13,
                                                     color: Colors.white),
@@ -157,7 +173,7 @@ class _ScanScreenState extends State<ScanScreen> {
                                       height: 20,
                                     ),
                                     Text(
-                                      "Pushes ${ScanScreen.apMap.length} AP Info",
+                                      "Pushes ${ScanScreen.pushStringNum} AP Info",
                                       style: const TextStyle(
                                           fontSize: 24,
                                           fontWeight: FontWeight.bold),
@@ -209,7 +225,8 @@ class _ScanScreenState extends State<ScanScreen> {
                                                   BorderRadius.circular(40),
                                             ),
                                           ),
-                                          onPressed: () {},
+                                          onPressed:
+                                              () {}, //To Do: Send to Database in NodeJS
                                           child: const Text("Push")),
                                     ],
                                   ),
