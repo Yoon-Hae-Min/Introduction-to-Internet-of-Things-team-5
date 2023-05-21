@@ -24,7 +24,8 @@ class _ApInfoState extends State<ApInfo> {
   }
 
   IconButton setIconButton() {
-    if (ScanScreen.apMap["${widget.ssid} ${widget.bssid}"] != null) {
+    if (ScanScreen.apMap.containsKey("${widget.ssid} ${widget.bssid}")) {
+      ScanScreen.apMap.addAll({"${widget.ssid} ${widget.bssid}": widget.dbm});
       return IconButton(
         icon: const Icon(
           Icons.check_circle,
@@ -32,10 +33,9 @@ class _ApInfoState extends State<ApInfo> {
           color: Colors.green,
         ),
         onPressed: () {
-          if (ScanScreen.apMap.containsKey("${widget.ssid} ${widget.bssid}")) {
+          setState(() {
             ScanScreen.apMap.remove("${widget.ssid} ${widget.bssid}");
-          }
-          setState(() {});
+          });
         },
       );
     } else {
@@ -46,11 +46,10 @@ class _ApInfoState extends State<ApInfo> {
           color: Colors.black,
         ),
         onPressed: () {
-          if (!ScanScreen.apMap.containsKey("${widget.ssid} ${widget.bssid}")) {
+          setState(() {
             ScanScreen.apMap
                 .addAll({"${widget.ssid} ${widget.bssid}": widget.dbm});
-          }
-          setState(() {});
+          });
         },
       );
     }
