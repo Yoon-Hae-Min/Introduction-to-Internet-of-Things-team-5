@@ -17,4 +17,4 @@ COPY . .
 EXPOSE 8080
 
 # Start the Node.js application
-CMD [ "npm", "start" ]
+CMD [ "sh", "-c", "MONGO_URI=$MONGO_URI npm start" ]
