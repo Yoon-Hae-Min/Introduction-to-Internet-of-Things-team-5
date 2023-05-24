@@ -8,28 +8,11 @@ let classes = [];
 const readdir = util.promisify(fs.readdir);
 const readFile = util.promisify(fs.readFile);
 let filenames;
+const Ap = require("../../models/apPower");
 
 var rf = new RandomForestClassifier({
   n_estimators: 10,
 });
-
-// Get training data from JSON files
-const getData = async () => {
-  try {
-    filenames = await readdir(`services/whereami/whereamijs-data`);
-  } catch (err) {
-    console.log(err);
-  }
-  if (filenames === undefined) {
-    console.log("undefined");
-  }
-  return Promise.all(
-    filenames.map(async (name) => {
-      classes.push(name.split(".")[0]);
-      return await readFile(`services/whereami/whereamijs-data/${name}`);
-    })
-  );
-};
 
 let networks = [];
 
@@ -37,11 +20,12 @@ const predict = async (liveData) => {
   labels = [];
   features = [];
   classes = [];
-  const allData = await getData();
+  const allData = await Ap.find();
   allData.map((data) => {
-    const arrayData = JSON.parse(data);
-    features.push(arrayData);
+    features.push(data.point);
+    classes.push(data.name);
   });
+  console.log(features, classes);
   classes.map((c, i) => features[0].map((s) => labels.push(i)));
   features = features.flat();
 
