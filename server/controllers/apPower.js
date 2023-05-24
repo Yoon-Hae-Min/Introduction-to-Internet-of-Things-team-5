@@ -2,13 +2,12 @@ const Ap = require("../models/apPower");
 const whereami = require("../services/whereami/predict");
 
 exports.createAPPower = async (req, res) => {
-  if (!req.body) {
+  if (!req.body || !req.body.name || !req.body.data) {
     res.status(400).send({
       message: "Data is empty!",
     });
     return;
   }
-
   // Set document
   const data = req.body;
   const apModel = new Ap({

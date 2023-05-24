@@ -5,8 +5,6 @@ const util = require("util");
 let labels = [];
 let features = [];
 let classes = [];
-const readdir = util.promisify(fs.readdir);
-const readFile = util.promisify(fs.readFile);
 let filenames;
 const Ap = require("../../models/apPower");
 
@@ -25,10 +23,8 @@ const predict = async (liveData) => {
     features.push(data.point);
     classes.push(data.name);
   });
-  console.log(features, classes);
   classes.map((c, i) => features[0].map((s) => labels.push(i)));
   features = features.flat();
-
   /* 
     For each network in the training data, network names might not all be the same as networks are not constant.
     To make sure we optimise the prediction, we look at the networks in the live data and compare it to our training set
@@ -38,7 +34,6 @@ const predict = async (liveData) => {
   const trainingDataNetworks = features.map((feature) =>
     Object.keys(feature).filter((element) => liveDataNetworks.includes(element))
   );
-
   /*
     The array is flattened so we can extract the network names that are present in all training samples.
     If a network name is found as many times as there are objects in the training set, we know this network was 
@@ -54,7 +49,7 @@ const predict = async (liveData) => {
       }
       return acc;
     }, {});
-
+  console.log(networksOccurences);
   const commonNetworks = Object.entries(networksOccurences).reduce(
     (acc, input) => {
       if (networksOccurences[input[0]] === trainingDataNetworks.length) {
@@ -64,7 +59,6 @@ const predict = async (liveData) => {
     },
     []
   );
-
   if (!commonNetworks.length) {
     console.error(
       "\x1b[31m",
