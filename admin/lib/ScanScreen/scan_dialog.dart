@@ -10,10 +10,22 @@ class PushDialog extends StatefulWidget {
 }
 
 class _PushDialogState extends State<PushDialog> {
-  final Dio _dio = Dio();
+  late final Dio _dio = Dio();
   final textController = TextEditingController();
-
   final _url = 'http://43.200.252.1:8080/point';
+
+  Future<bool> pushResult() async {
+    var response = await _dio.post(
+      _url,
+      data: pushJson(textController.text),
+    );
+
+    if (response.statusCode == 200) {
+      return true;
+    } else {
+      return false;
+    }
+  }
 
 //Function to send only information of ap detected in scan
   String pushString() {
@@ -134,7 +146,8 @@ class _PushDialogState extends State<PushDialog> {
                     borderRadius: BorderRadius.circular(40),
                   ),
                 ),
-                onPressed: () {
+                onPressed: () async {
+                  var pushgood = await pushResult();
                   showDialog(
                       context: context,
                       barrierDismissible: true,
@@ -143,25 +156,10 @@ class _PushDialogState extends State<PushDialog> {
                           content: SizedBox(
                             height: 50,
                             child: Center(
-                                child: FutureBuilder(
-                                    future: _dio.post(
-                                      _url,
-                                      data: pushJson(textController.text),
-                                    ),
-                                    builder: (context, snapshot) {
-                                      if (snapshot.connectionState ==
-                                          ConnectionState.waiting) {
-                                        return const CircularProgressIndicator(
-                                          color: Colors.black,
-                                        );
-                                      } else if (snapshot.hasError) {
-                                        return const Text(
-                                            "Failed to Send Data.");
-                                      } else {
-                                        return const Text(
-                                            "Completed to Send Data.");
-                                      }
-                                    })),
+                                child: pushgood
+                                    ? const Text("Completed to Send Data")
+                                    : const Text(
+                                        "Failed to Send Data")), //@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
                           ),
                           actions: [
                             Row(
