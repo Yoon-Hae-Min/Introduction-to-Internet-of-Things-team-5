@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- activity_main.xml -->
+
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:paddingLeft="16dp"
+    android:paddingTop="16dp"
+    android:paddingRight="16dp"
+    android:paddingBottom="16dp"
+    tools:context=".MainActivity">
+
+    <!-- 도면 이미지 표시 -->
+    <ImageView
+        android:id="@+id/floorPlanImageView"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:src="@drawable/floorplan2"
+        android:scaleType="fitCenter" />
+
+    <!-- 자신의 위치를 나타내는 아이콘 -->
+
+    <!-- 목적지 선택 버튼 -->
+
+    <ImageView
+        android:id="@+id/currentLocationImageView"
+        android:layout_width="24dp"
+        android:layout_height="24dp"
+        android:layout_alignStart="@+id/floorPlanImageView"
+        android:layout_alignTop="@+id/floorPlanImageView"
+        android:layout_marginStart="284dp"
+        android:layout_marginTop="644dp"
+        android:contentDescription="@string/current_location"
+        android:src="@drawable/current_location_icon" />
+
+    <Button
+        android:id="@+id/selectDestinationButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/select_destination"
+        android:layout_alignParentBottom="true"
+        android:layout_centerHorizontal="true"
+        android:layout_marginBottom="16dp" />
+
+</RelativeLayout>
