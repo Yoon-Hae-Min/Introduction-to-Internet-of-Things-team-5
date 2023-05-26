@@ -13,18 +13,25 @@ class _PushDialogState extends State<PushDialog> {
   late final Dio _dio = Dio();
   final textController = TextEditingController();
   final _url = 'http://43.200.252.1:8080/point';
+  late Future<Response> postFuture;
 
-  Future<bool> pushResult() async {
+  Future<Response> _postData() async {
     var response = await _dio.post(
       _url,
       data: pushJson(textController.text),
     );
 
-    if (response.statusCode == 200) {
-      return true;
-    } else {
-      return false;
-    }
+    return response;
+  }
+
+  Map<String, dynamic> pushJson(String spot) {
+    Map<String, dynamic> jsonData = {};
+    List<Map<String, int>> aplist = [];
+    ScanScreen.apJson.forEach((key, value) {
+      aplist.add({key: value});
+    });
+    jsonData.addAll({"name": spot, "data": aplist});
+    return jsonData;
   }
 
 //Function to send only information of ap detected in scan
@@ -46,16 +53,6 @@ class _PushDialogState extends State<PushDialog> {
       }
     });
     return pushAPs;
-  }
-
-  Map<String, dynamic> pushJson(String spot) {
-    Map<String, dynamic> jsonData = {};
-    List<Map<String, int>> aplist = [];
-    ScanScreen.apJson.forEach((key, value) {
-      aplist.add({key: value});
-    });
-    jsonData.addAll({"name": spot, "data": aplist});
-    return jsonData;
   }
 
   @override
@@ -146,8 +143,9 @@ class _PushDialogState extends State<PushDialog> {
                     borderRadius: BorderRadius.circular(40),
                   ),
                 ),
-                onPressed: () async {
-                  var pushgood = await pushResult();
+                onPressed: () {
+                  postFuture =
+                      _postData(); //Avoid futurebuilder duplicate calls
                   showDialog(
                       context: context,
                       barrierDismissible: true,
@@ -156,10 +154,22 @@ class _PushDialogState extends State<PushDialog> {
                           content: SizedBox(
                             height: 50,
                             child: Center(
-                                child: pushgood
-                                    ? const Text("Completed to Send Data")
-                                    : const Text(
-                                        "Failed to Send Data")), //@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+                                child: FutureBuilder<Response>(
+                                    future: postFuture,
+                                    builder: (context, snapshot) {
+                                      if (snapshot.connectionState ==
+                                          ConnectionState.waiting) {
+                                        return const CircularProgressIndicator(
+                                          color: Colors.black,
+                                        );
+                                      } else if (snapshot.hasError) {
+                                        return const Text(
+                                            "Failed to Send Data");
+                                      } else {
+                                        return const Text(
+                                            "Completed to Send Data");
+                                      }
+                                    })),
                           ),
                           actions: [
                             Row(

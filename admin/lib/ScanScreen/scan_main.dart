@@ -136,7 +136,7 @@ class _ScanScreenState extends State<ScanScreen> {
                             context: context,
                             barrierDismissible: false,
                             builder: (context) {
-                              return PushDialog();
+                              return const PushDialog();
                             });
                       },
                       child: Text(
