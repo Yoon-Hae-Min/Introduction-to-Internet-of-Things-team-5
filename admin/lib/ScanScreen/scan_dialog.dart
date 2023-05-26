@@ -10,19 +10,9 @@ class PushDialog extends StatefulWidget {
 }
 
 class _PushDialogState extends State<PushDialog> {
-  late final Dio _dio = Dio();
   final textController = TextEditingController();
   final _url = 'http://43.200.252.1:8080/point';
   late Future<Response> postFuture;
-
-  Future<Response> _postData() async {
-    var response = await _dio.post(
-      _url,
-      data: pushJson(textController.text),
-    );
-
-    return response;
-  }
 
   Map<String, dynamic> pushJson(String spot) {
     Map<String, dynamic> jsonData = {};
@@ -144,8 +134,10 @@ class _PushDialogState extends State<PushDialog> {
                   ),
                 ),
                 onPressed: () {
-                  postFuture =
-                      _postData(); //Avoid futurebuilder duplicate calls
+                  postFuture = Dio().post(
+                    _url,
+                    data: pushJson(textController.text),
+                  ); //Avoid futurebuilder duplicate calls
                   showDialog(
                       context: context,
                       barrierDismissible: true,
