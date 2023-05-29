@@ -23,6 +23,8 @@ class SensorActivity : BaseActivity<ActivitySensorBinding>(ActivitySensorBinding
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
+        binding.tvDestination.text = intent.getStringExtra("dest")
+
         // Get default sensors
         mSensorManager = getSystemService(SENSOR_SERVICE) as SensorManager?
         mAccelerometer = mSensorManager?.getDefaultSensor(Sensor.TYPE_ACCELEROMETER)

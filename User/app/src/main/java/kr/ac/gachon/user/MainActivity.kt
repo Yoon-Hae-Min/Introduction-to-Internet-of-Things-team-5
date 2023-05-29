@@ -13,7 +13,7 @@ class MainActivity : BaseActivity<ActivityMainBinding>(ActivityMainBinding::infl
         binding.run {
             btnStart.setOnClickListener {
                 Log.d("seori", "Click start")
-                var intent = Intent(this@MainActivity, SensorActivity::class.java)
+                var intent = Intent(this@MainActivity, SetDestActivity::class.java)
                 startActivity(intent)
             }
         }
