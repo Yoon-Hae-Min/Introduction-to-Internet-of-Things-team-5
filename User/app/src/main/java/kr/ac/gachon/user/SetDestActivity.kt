@@ -24,7 +24,7 @@ class SetDestActivity : BaseActivity<ActivitySetDestBinding>(ActivitySetDestBind
         // Set click event of start navigation btn
         binding.btnNavi.setOnClickListener {
             // Set intent to pass data
-            val intent = Intent(this, SensorActivity::class.java)
+            val intent = Intent(this, NavigationActivity::class.java)
             intent.putExtra("dest", "${binding.spnDest.selectedItem}")
             // Start navigation page
             startActivity(intent)

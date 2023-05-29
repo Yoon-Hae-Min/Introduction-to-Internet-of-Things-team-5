@@ -8,9 +8,9 @@ import android.os.Bundle
 import android.util.Log
 import android.view.animation.Animation
 import android.view.animation.RotateAnimation
-import kr.ac.gachon.user.databinding.ActivitySensorBinding
+import kr.ac.gachon.user.databinding.ActivityNavigationBinding
 
-class SensorActivity : BaseActivity<ActivitySensorBinding>(ActivitySensorBinding::inflate), SensorEventListener {
+class NavigationActivity : BaseActivity<ActivityNavigationBinding>(ActivityNavigationBinding::inflate), SensorEventListener {
     private var mSensorManager: SensorManager? = null
     private var mAccelerometer: Sensor? = null
     private var mMagnetometer: Sensor? = null
@@ -23,7 +23,7 @@ class SensorActivity : BaseActivity<ActivitySensorBinding>(ActivitySensorBinding
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        binding.tvDestination.text = intent.getStringExtra("dest")
+        binding.tvDestinationContent.text = intent.getStringExtra("dest")
 
         // Get default sensors
         mSensorManager = getSystemService(SENSOR_SERVICE) as SensorManager?
@@ -80,7 +80,7 @@ class SensorActivity : BaseActivity<ActivitySensorBinding>(ActivitySensorBinding
                 //좌우회전
                 binding.tvSpeed.text = "roll=$roll"
                 // 이미지 회전
-//                rotateArrow(0F)
+                rotateArrow(90F)
             }
         }
     }
@@ -134,7 +134,7 @@ class SensorActivity : BaseActivity<ActivitySensorBinding>(ActivitySensorBinding
         ra.fillAfter = true
 
         binding.run {
-            imgArrow.startAnimation(ra)
+            imgNaviArrow.startAnimation(ra)
             mCurrentDegree = value
         }
     }
