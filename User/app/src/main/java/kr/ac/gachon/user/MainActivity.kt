@@ -9,14 +9,10 @@ class MainActivity : BaseActivity<ActivityMainBinding>(ActivityMainBinding::infl
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        // Buttons for testing
+        // Set click event of start button
         binding.run {
-            btnIndoorNavi.setOnClickListener {
-//                var intent = Intent(this@MainActivity, )
-//                startActivity(intent)
-            }
-            btnSensor.setOnClickListener {
-                Log.e("seori", "sensor")
+            btnStart.setOnClickListener {
+                Log.d("seori", "Click start")
                 var intent = Intent(this@MainActivity, SensorActivity::class.java)
                 startActivity(intent)
             }
