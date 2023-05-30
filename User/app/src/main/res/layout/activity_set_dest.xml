@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".SetDestActivity"
+    android:background="@color/white">
+    <!-- Set Destination from the list Layout   -->
+    <View
+        android:id="@+id/view_line"
+        android:layout_width="5dp"
+        android:layout_height="30dp"
+        android:background="@color/blue"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        android:layout_marginTop="110dp"
+        android:layout_marginLeft="20dp"
+        />
+    <TextView
+        android:id="@+id/tv_guide_first"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Where do you want to go?"
+        android:textSize="24sp"
+        android:textColor="@color/black"
+        app:layout_constraintLeft_toRightOf="@+id/view_line"
+        app:layout_constraintTop_toTopOf="@+id/view_line"
+        app:layout_constraintBottom_toBottomOf="@+id/view_line"
+        android:layout_marginLeft="15dp"
+        />
+    <TextView
+        android:id="@+id/tv_guide_second"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="- Select your destination from the list"
+        android:textSize="16sp"
+        android:textColor="@color/black"
+        app:layout_constraintLeft_toLeftOf="@+id/view_line"
+        app:layout_constraintTop_toBottomOf="@+id/view_line"
+        android:layout_marginLeft="5dp"
+        android:layout_marginTop="15dp"
+        />
+    <Spinner
+        android:id="@+id/spn_dest"
+        android:layout_width="match_parent"
+        android:layout_height="50dp"
+        android:textColor="@color/black"
+        android:background="@drawable/spinner_border"
+        app:layout_constraintTop_toBottomOf="@+id/tv_guide_second"
+        android:layout_marginTop="80dp"
+        android:layout_marginStart="20dp"
+        android:layout_marginEnd="20dp"
+        tools:layout_editor_absoluteX="16dp" />
+    <Button
+        android:id="@+id/btn_navi"
+        android:layout_width="255dp"
+        android:layout_height="60dp"
+        android:backgroundTint="@color/blue"
+        android:text="Start navigation"
+        android:textSize="24sp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toRightOf="parent"
+        android:layout_marginBottom="130dp"
+        />
+</androidx.constraintlayout.widget.ConstraintLayout>
