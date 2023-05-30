@@ -88,9 +88,9 @@ class NavigationActivity : BaseActivity<ActivityNavigationBinding>(ActivityNavig
                 Log.e("seori1", "${pitch}, ${roll}, ${mCurrentDegree}")
 
                 //경사도
-                binding.tvDistance.text = "pitch=$pitch"
+                binding.tvDistanceContent.text = "pitch=$pitch"
                 //좌우회전
-                binding.tvSpeed.text = "roll=$roll"
+                binding.tvSpeedContent.text = "roll=$roll"
                 // 이미지 회전
                 rotateArrow(90F)
             }
@@ -99,34 +99,6 @@ class NavigationActivity : BaseActivity<ActivityNavigationBinding>(ActivityNavig
 
     override fun onAccuracyChanged(sensor: Sensor?, accuracy: Int) {
         // TODO Auto-generated method stub
-    }
-
-    // 두 지점 사이의 거리 측정
-    fun getDistanceFromLatLonInKm(
-        lat1: Double,
-        lon1: Double,
-        lat2: Double,
-        lon2: Double
-    ): Double {
-        val R = 6371
-        // Radius of the earth in km
-        val dLat = deg2rad(lat2 - lat1)
-        // deg2rad below
-        val dLon = deg2rad(lon2 - lon1)
-        val a =
-            Math.sin(dLat / 2) * Math.sin(dLat / 2) + Math.cos(
-                deg2rad(lat1)
-            ) * Math.cos(deg2rad(lat2)) * Math.sin(dLon / 2) * Math.sin(
-                dLon / 2
-            )
-        val c =
-            2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))
-        // Distance in km
-        return R * c
-    }
-
-    private fun deg2rad(deg: Double): Double {
-        return deg * (Math.PI / 180)
     }
 
     // Rotate arrow image
@@ -151,6 +123,7 @@ class NavigationActivity : BaseActivity<ActivityNavigationBinding>(ActivityNavig
         }
     }
 
+    // Send and Get my point to server through API
     private fun getMyPoint() {
         val service = ApplicationClass.sRetrofit.create(RetrofitInterface::class.java)
         val request = GetPointRequest(
@@ -166,7 +139,7 @@ class NavigationActivity : BaseActivity<ActivityNavigationBinding>(ActivityNavig
                 if (response.isSuccessful) {
                     val body = response.body()
                     val location = body?.location
-                    binding.tvDestinationContent.text = location
+                    binding.tvMyPoint.text = location
                 } else {
                     // If fail, show toast message to user
                     showCustomToast("네트워크 연결에 실패했습니다")
