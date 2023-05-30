@@ -1,6 +1,7 @@
 package kr.ac.gachon.user.config
 
 import android.app.Application
+import kr.ac.gachon.user.BuildConfig
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
@@ -8,7 +9,8 @@ import retrofit2.converter.gson.GsonConverterFactory
 import java.util.concurrent.TimeUnit
 
 class ApplicationClass : Application() {
-    val API_URL = "http://10.0.2.2:5000"
+    private val SERVER_URL = BuildConfig.SERVER_URL
+    private val API_URL = "http://$SERVER_URL:5000"
 
     companion object {
         // Retrofit instance

@@ -100,7 +100,8 @@
         android:textSize="25sp"
         android:textColor="@color/black"
         app:layout_constraintTop_toBottomOf="@+id/tv_distance"
-        app:layout_constraintLeft_toLeftOf="@+id/tv_distance"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toRightOf="parent"
         android:layout_marginTop="30dp"
         />
 </androidx.constraintlayout.widget.ConstraintLayout>

@@ -1,14 +1,20 @@
 package kr.ac.gachon.user
 
+import android.Manifest
+import android.R.attr.level
+import android.content.Context
+import android.content.pm.PackageManager
 import android.hardware.Sensor
 import android.hardware.SensorEvent
 import android.hardware.SensorEventListener
 import android.hardware.SensorManager
+import android.net.wifi.WifiManager
+import android.os.Build
 import android.os.Bundle
-import android.util.Log
-import android.view.View
 import android.view.animation.Animation
 import android.view.animation.RotateAnimation
+import androidx.annotation.RequiresApi
+import androidx.core.app.ActivityCompat
 import kr.ac.gachon.user.config.ApplicationClass
 import kr.ac.gachon.user.config.BaseActivity
 import kr.ac.gachon.user.databinding.ActivityNavigationBinding
@@ -18,6 +24,9 @@ import kr.ac.gachon.user.model.GetPointResponse
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
+import kotlin.math.absoluteValue
+import kotlin.properties.Delegates
+
 
 class NavigationActivity : BaseActivity<ActivityNavigationBinding>(ActivityNavigationBinding::inflate), SensorEventListener {
     private var mSensorManager: SensorManager? = null
@@ -28,6 +37,11 @@ class NavigationActivity : BaseActivity<ActivityNavigationBinding>(ActivityNavig
     private var mLastAccelerometerSet = false
     private var mLastMagnetometerSet = false
     private var mCurrentDegree = 0f
+    private lateinit var wifiManager: WifiManager
+    private var bssid by Delegates.notNull<String>()
+    private var ssid by Delegates.notNull<String>()
+    private var rssi by Delegates.notNull<Int>()
+    private var dataList = arrayListOf<Data>()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -46,8 +60,7 @@ class NavigationActivity : BaseActivity<ActivityNavigationBinding>(ActivityNavig
         mSensorManager?.registerListener(this, mAccelerometer, SensorManager.SENSOR_DELAY_UI)
         mSensorManager?.registerListener(this, mMagnetometer, SensorManager.SENSOR_DELAY_UI)
 
-        // Test API
-        getMyPoint()
+        getWifiStrengthPercentage(this)
     }
 
     override fun onPause() {
@@ -69,6 +82,7 @@ class NavigationActivity : BaseActivity<ActivityNavigationBinding>(ActivityNavig
     }
 
     // 센서를 통해 현재 디바이스 방향 감지
+    @RequiresApi(Build.VERSION_CODES.R)
     override fun onSensorChanged(event: SensorEvent) {
         val lastComputedTime: Long = 0
         if (event.sensor == mAccelerometer) {
@@ -82,10 +96,10 @@ class NavigationActivity : BaseActivity<ActivityNavigationBinding>(ActivityNavig
             val tempTime = System.currentTimeMillis()
             if (tempTime - lastComputedTime > 1000) {
                 val orientationValues = computeOrientation(mLastAccelerometer, mLastMagnetometer)
-                Log.e("seori", "${orientationValues[1]}, ${orientationValues[2]}")
+//                Log.e("seori", "${orientationValues[1]}, ${orientationValues[2]}")
                 val pitch = (360 * orientationValues[1] / (2 * Math.PI)).toInt()
                 val roll = (360 * orientationValues[2] / (2 * Math.PI)).toInt()
-                Log.e("seori1", "${pitch}, ${roll}, ${mCurrentDegree}")
+//                Log.e("seori1", "${pitch}, ${roll}, ${mCurrentDegree}")
 
                 //경사도
                 binding.tvDistanceContent.text = "pitch=$pitch"
@@ -99,6 +113,25 @@ class NavigationActivity : BaseActivity<ActivityNavigationBinding>(ActivityNavig
 
     override fun onAccuracyChanged(sensor: Sensor?, accuracy: Int) {
         // TODO Auto-generated method stub
+    }
+
+    fun getWifiStrengthPercentage(context: Context) {
+        if (applicationContext.checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED){
+            // Permission Not Granted
+            ActivityCompat.requestPermissions(this, arrayOf<String>(android.Manifest.permission.ACCESS_FINE_LOCATION), 1);
+        }
+        wifiManager = applicationContext.getSystemService(Context.WIFI_SERVICE) as WifiManager
+        val scanResults = wifiManager.scanResults
+        for (result in scanResults) {
+            bssid = wifiManager.connectionInfo.bssid
+            ssid = wifiManager.connectionInfo.ssid
+            rssi = wifiManager.connectionInfo.rssi.absoluteValue
+            dataList.add(Data(ssid, bssid, rssi))
+            binding.tvMyPoint.text = "$ssid, $bssid, $rssi"
+        }
+
+        // Test API
+        getMyPoint()
     }
 
     // Rotate arrow image
@@ -127,11 +160,7 @@ class NavigationActivity : BaseActivity<ActivityNavigationBinding>(ActivityNavig
     private fun getMyPoint() {
         val service = ApplicationClass.sRetrofit.create(RetrofitInterface::class.java)
         val request = GetPointRequest(
-            arrayListOf(
-                Data("95:1f:33:ac:35:11", 40),
-                Data("91:9f:33:5c:23:02", 20),
-                Data("96:7f:23:55:29:11", 50)
-            )
+            dataList
         )
 
         service.getMyPoint(request).enqueue(object : Callback<GetPointResponse> {

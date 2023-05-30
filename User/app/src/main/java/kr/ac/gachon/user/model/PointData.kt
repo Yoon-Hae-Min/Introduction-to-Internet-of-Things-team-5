@@ -6,8 +6,9 @@ data class GetPointRequest(
 )
 
 data class Data(
-    val mac: String,
-    val rssi: Int
+    val ssid: String,
+    val bssid: String,
+    val quality: Int
 )
 
 // Response data class for getting my point
