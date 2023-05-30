@@ -23,19 +23,20 @@ class _ApInfoState extends State<ApInfo> {
     return Icons.question_mark;
   }
 
-  bool containsAP(String mac) {
+  bool containsAP(String bssid) {
     for (var element in ScanScreen.apMap) {
-      if (element['mac'] == mac) return true;
+      if (element['bssid'] == bssid) return true;
     }
     return false;
   }
 
   IconButton setIconButton() {
     if (containsAP(widget.bssid)) {
-      ScanScreen.apMap.removeWhere((element) => element["mac"] == widget.bssid);
+      ScanScreen.apMap
+          .removeWhere((element) => element["bssid"] == widget.bssid);
       ScanScreen.apMap.add({
         "ssid": widget.ssid,
-        "mac": widget.bssid,
+        "bssid": widget.bssid,
         "quality": widget.dbm.abs()
       });
       return IconButton(
@@ -47,7 +48,7 @@ class _ApInfoState extends State<ApInfo> {
         onPressed: () {
           setState(() {
             ScanScreen.apMap
-                .removeWhere((element) => element["mac"] == widget.bssid);
+                .removeWhere((element) => element["bssid"] == widget.bssid);
           });
         },
       );
@@ -62,7 +63,7 @@ class _ApInfoState extends State<ApInfo> {
           setState(() {
             ScanScreen.apMap.add({
               "ssid": widget.ssid,
-              "mac": widget.bssid,
+              "bssid": widget.bssid,
               "quality": widget.dbm.abs()
             });
           });

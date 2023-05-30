@@ -41,12 +41,12 @@ class _PushDialogState extends State<PushDialog> {
     }
 
     for (var element in ScanScreen.apMap) {
-      if (compareString.contains(element['mac'])) {
+      if (compareString.contains(element['bssid'])) {
         pushAPs +=
-            'ssid : ${element['ssid']}, bssid : ${element['mac']}, quality : ${element['quality']}\n';
+            'ssid : ${element['ssid']}, bssid : ${element['bssid']}, quality : ${element['quality']}\n';
         ScanScreen.apJson.add({
           'ssid': element['ssid'],
-          'bssid': element['mac'],
+          'bssid': element['bssid'],
           'quality': element['quality']
         });
         ScanScreen.pushStringNum++;
