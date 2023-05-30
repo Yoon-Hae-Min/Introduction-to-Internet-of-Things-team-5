@@ -31,6 +31,7 @@ const predict = async (liveData) => {
     to only keep the values present in all objects. 
   */
   const liveDataNetworks = Object.keys(liveData[0]);
+  console.log(features);
   const trainingDataNetworks = features.map((feature) =>
     Object.keys(feature).filter((element) => liveDataNetworks.includes(element))
   );
@@ -39,6 +40,7 @@ const predict = async (liveData) => {
     If a network name is found as many times as there are objects in the training set, we know this network was 
     found every time we sampled wifi data so we should keep it.
   */
+  console.log(trainingDataNetworks, trainingDataNetworks.flat());
   var networksOccurences = trainingDataNetworks
     .flat()
     .reduce(function (acc, curr) {
@@ -49,7 +51,6 @@ const predict = async (liveData) => {
       }
       return acc;
     }, {});
-  console.log(networksOccurences);
   const commonNetworks = Object.entries(networksOccurences).reduce(
     (acc, input) => {
       if (networksOccurences[input[0]] === trainingDataNetworks.length) {
