@@ -6,9 +6,18 @@ import android.hardware.SensorEventListener
 import android.hardware.SensorManager
 import android.os.Bundle
 import android.util.Log
+import android.view.View
 import android.view.animation.Animation
 import android.view.animation.RotateAnimation
+import kr.ac.gachon.user.config.ApplicationClass
+import kr.ac.gachon.user.config.BaseActivity
 import kr.ac.gachon.user.databinding.ActivityNavigationBinding
+import kr.ac.gachon.user.model.Data
+import kr.ac.gachon.user.model.GetPointRequest
+import kr.ac.gachon.user.model.GetPointResponse
+import retrofit2.Call
+import retrofit2.Callback
+import retrofit2.Response
 
 class NavigationActivity : BaseActivity<ActivityNavigationBinding>(ActivityNavigationBinding::inflate), SensorEventListener {
     private var mSensorManager: SensorManager? = null
@@ -36,6 +45,9 @@ class NavigationActivity : BaseActivity<ActivityNavigationBinding>(ActivityNavig
         // Register sensor
         mSensorManager?.registerListener(this, mAccelerometer, SensorManager.SENSOR_DELAY_UI)
         mSensorManager?.registerListener(this, mMagnetometer, SensorManager.SENSOR_DELAY_UI)
+
+        // Test API
+        getMyPoint()
     }
 
     override fun onPause() {
@@ -90,7 +102,7 @@ class NavigationActivity : BaseActivity<ActivityNavigationBinding>(ActivityNavig
     }
 
     // 두 지점 사이의 거리 측정
-    fun GetDistanceFromLatLonInKm(
+    fun getDistanceFromLatLonInKm(
         lat1: Double,
         lon1: Double,
         lat2: Double,
@@ -137,5 +149,33 @@ class NavigationActivity : BaseActivity<ActivityNavigationBinding>(ActivityNavig
             imgNaviArrow.startAnimation(ra)
             mCurrentDegree = value
         }
+    }
+
+    private fun getMyPoint() {
+        val service = ApplicationClass.sRetrofit.create(RetrofitInterface::class.java)
+        val request = GetPointRequest(
+            arrayListOf(
+                Data("95:1f:33:ac:35:11", 40),
+                Data("91:9f:33:5c:23:02", 20),
+                Data("96:7f:23:55:29:11", 50)
+            )
+        )
+
+        service.getMyPoint(request).enqueue(object : Callback<GetPointResponse> {
+            override fun onResponse(call: Call<GetPointResponse>, response: Response<GetPointResponse>) {
+                if (response.isSuccessful) {
+                    val body = response.body()
+                    val location = body?.location
+                    binding.tvDestinationContent.text = location
+                } else {
+                    // If fail, show toast message to user
+                    showCustomToast("네트워크 연결에 실패했습니다")
+                }
+            }
+            // If fail, show toast message to user
+            override fun onFailure(call: Call<GetPointResponse>, t: Throwable) {
+                showCustomToast("네트워크 연결에 실패했습니다")
+            }
+        })
     }
 }

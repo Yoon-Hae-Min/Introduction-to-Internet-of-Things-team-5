@@ -7,6 +7,7 @@ import android.view.View
 import android.widget.AdapterView
 import android.widget.ArrayAdapter
 import android.widget.Spinner
+import kr.ac.gachon.user.config.BaseActivity
 import kr.ac.gachon.user.databinding.ActivitySetDestBinding
 
 // Page to set destination from the list

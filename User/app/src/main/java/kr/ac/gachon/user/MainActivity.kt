@@ -3,6 +3,7 @@ package kr.ac.gachon.user
 import android.content.Intent
 import android.os.Bundle
 import android.util.Log
+import kr.ac.gachon.user.config.BaseActivity
 import kr.ac.gachon.user.databinding.ActivityMainBinding
 
 class MainActivity : BaseActivity<ActivityMainBinding>(ActivityMainBinding::inflate) {
