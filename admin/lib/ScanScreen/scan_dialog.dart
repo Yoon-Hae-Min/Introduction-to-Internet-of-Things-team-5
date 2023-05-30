@@ -11,7 +11,6 @@ class PushDialog extends StatefulWidget {
 
 class _PushDialogState extends State<PushDialog> {
   final textController = TextEditingController();
-  //final _url = 'http://43.200.252.1:8080/point';
   final _url = 'http://158.247.215.83:5000/train';
   late Future<Response> postFuture;
 
@@ -21,10 +20,6 @@ class _PushDialogState extends State<PushDialog> {
     for (var element in ScanScreen.apJson) {
       aplist.add(element);
     }
-
-    // ScanScreen.apJson.forEach((key, value) {
-    //   aplist.add({key: value});
-    // });
     jsonData.addAll({"name": spot, "data": aplist});
     return jsonData;
   }
@@ -52,14 +47,6 @@ class _PushDialogState extends State<PushDialog> {
         ScanScreen.pushStringNum++;
       }
     }
-
-    // ScanScreen.apMap.forEach((element) {
-    //   if (compareString.contains(element['mac'])) {
-    //     pushAPs += '$key : $value\n';
-    //     ScanScreen.apJson.addAll({key: value});
-    //     ScanScreen.pushStringNum++;
-    //   }
-    // });
     return pushAPs;
   }
 
