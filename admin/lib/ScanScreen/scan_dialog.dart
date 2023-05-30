@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'scan_main.dart';
 import 'package:dio/dio.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 
 class PushDialog extends StatefulWidget {
   const PushDialog({super.key});
@@ -11,8 +12,9 @@ class PushDialog extends StatefulWidget {
 
 class _PushDialogState extends State<PushDialog> {
   final textController = TextEditingController();
-  //final _url = 'http://43.200.252.1:8080/point';
-  final _url = 'http://158.247.215.83:5000/train';
+  //final _url = 'http://43.200.252.1:8080/point'; //해민님 서버
+  final _url = 'http://158.247.215.83:5000/train'; //상연님 서버
+  final _url2 = 'http://158.247.215.83:5000/predict'; //상연님 서버
   late Future<Response> postFuture;
 
   Map<String, dynamic> pushJson(String spot) {
@@ -21,10 +23,6 @@ class _PushDialogState extends State<PushDialog> {
     for (var element in ScanScreen.apJson) {
       aplist.add(element);
     }
-
-    // ScanScreen.apJson.forEach((key, value) {
-    //   aplist.add({key: value});
-    // });
     jsonData.addAll({"name": spot, "data": aplist});
     return jsonData;
   }
@@ -52,14 +50,6 @@ class _PushDialogState extends State<PushDialog> {
         ScanScreen.pushStringNum++;
       }
     }
-
-    // ScanScreen.apMap.forEach((element) {
-    //   if (compareString.contains(element['mac'])) {
-    //     pushAPs += '$key : $value\n';
-    //     ScanScreen.apJson.addAll({key: value});
-    //     ScanScreen.pushStringNum++;
-    //   }
-    // });
     return pushAPs;
   }
 
@@ -89,29 +79,62 @@ class _PushDialogState extends State<PushDialog> {
           const SizedBox(
             height: 10,
           ),
-          SizedBox(
-            width: MediaQuery.of(context).size.width / 3,
-            height: 30,
-            child: TextField(
-              controller: textController,
-              maxLines: 1,
-              keyboardType: TextInputType.multiline,
-              decoration: const InputDecoration(
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.all(Radius.circular(50.0)),
-                  borderSide: BorderSide.none,
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            children: [
+              SizedBox(
+                width: MediaQuery.of(context).size.width / 3,
+                height: 30,
+                child: TextField(
+                  controller: textController,
+                  maxLines: 1,
+                  keyboardType: TextInputType.multiline,
+                  decoration: const InputDecoration(
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.all(Radius.circular(50.0)),
+                      borderSide: BorderSide.none,
+                    ),
+                    hintText: 'Spot',
+                    hintStyle: TextStyle(
+                      color: Colors.white,
+                      fontSize: 14,
+                    ),
+                    contentPadding:
+                        EdgeInsets.symmetric(vertical: 10.0, horizontal: 15.0),
+                    filled: true,
+                    fillColor: Colors.black26,
+                  ),
                 ),
-                hintText: 'Spot',
-                hintStyle: TextStyle(
-                  color: Colors.white,
-                  fontSize: 14,
-                ),
-                contentPadding:
-                    EdgeInsets.symmetric(vertical: 10.0, horizontal: 15.0),
-                filled: true,
-                fillColor: Colors.black26,
               ),
-            ),
+              ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.blue,
+                    fixedSize: Size(
+                      MediaQuery.of(context).size.width / 5,
+                      MediaQuery.of(context).size.height / 30,
+                    ),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(40),
+                    ),
+                  ),
+                  onPressed: () async {
+                    Map<String, dynamic> predict = pushJson("asdfs");
+                    predict.remove('name');
+                    var response = await Dio().post(
+                      _url2,
+                      data: predict,
+                    );
+                    Fluttertoast.showToast(
+                        msg: response.data.toString(),
+                        toastLength: Toast.LENGTH_SHORT,
+                        gravity: ToastGravity.CENTER,
+                        timeInSecForIosWeb: 1,
+                        backgroundColor: Colors.red,
+                        textColor: Colors.white,
+                        fontSize: 16.0);
+                  },
+                  child: const Text("Predict")),
+            ],
           ),
           const SizedBox(
             height: 10,
