@@ -11,15 +11,20 @@ class PushDialog extends StatefulWidget {
 
 class _PushDialogState extends State<PushDialog> {
   final textController = TextEditingController();
-  final _url = 'http://43.200.252.1:8080/point';
+  //final _url = 'http://43.200.252.1:8080/point';
+  final _url = 'http://158.247.215.83:5000/train';
   late Future<Response> postFuture;
 
   Map<String, dynamic> pushJson(String spot) {
     Map<String, dynamic> jsonData = {};
-    List<Map<String, int>> aplist = [];
-    ScanScreen.apJson.forEach((key, value) {
-      aplist.add({key: value});
-    });
+    List<Map<String, dynamic>> aplist = [];
+    for (var element in ScanScreen.apJson) {
+      aplist.add(element);
+    }
+
+    // ScanScreen.apJson.forEach((key, value) {
+    //   aplist.add({key: value});
+    // });
     jsonData.addAll({"name": spot, "data": aplist});
     return jsonData;
   }
@@ -32,16 +37,29 @@ class _PushDialogState extends State<PushDialog> {
     ScanScreen.pushStringNum = 0;
 
     for (int i = 0; i < ScanScreen.accessPoints.length; i++) {
-      compareString.add(
-          "${ScanScreen.accessPoints[i].ssid} ${ScanScreen.accessPoints[i].bssid}");
+      compareString.add(ScanScreen.accessPoints[i].bssid);
     }
-    ScanScreen.apMap.forEach((key, value) {
-      if (compareString.contains(key)) {
-        pushAPs += '$key : $value\n';
-        ScanScreen.apJson.addAll({key: value});
+
+    for (var element in ScanScreen.apMap) {
+      if (compareString.contains(element['mac'])) {
+        pushAPs +=
+            'ssid : ${element['ssid']}, mac : ${element['mac']}, quality : ${element['quality']}\n';
+        ScanScreen.apJson.add({
+          'ssid': element['ssid'],
+          'mac': element['mac'],
+          'quality': element['quality']
+        });
         ScanScreen.pushStringNum++;
       }
-    });
+    }
+
+    // ScanScreen.apMap.forEach((element) {
+    //   if (compareString.contains(element['mac'])) {
+    //     pushAPs += '$key : $value\n';
+    //     ScanScreen.apJson.addAll({key: value});
+    //     ScanScreen.pushStringNum++;
+    //   }
+    // });
     return pushAPs;
   }
 

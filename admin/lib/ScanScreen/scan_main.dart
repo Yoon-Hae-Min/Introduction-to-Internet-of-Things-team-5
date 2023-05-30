@@ -6,8 +6,8 @@ import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
 
 class ScanScreen extends StatefulWidget {
   static List<WiFiAccessPoint> accessPoints = <WiFiAccessPoint>[];
-  static Map<String, int> apMap = {};
-  static Map<String, int> apJson = {};
+  static List<Map<String, dynamic>> apMap = [];
+  static List<Map<String, dynamic>> apJson = [];
   static int pushStringNum = 0;
   const ScanScreen({super.key});
 

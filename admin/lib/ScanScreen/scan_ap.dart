@@ -23,9 +23,21 @@ class _ApInfoState extends State<ApInfo> {
     return Icons.question_mark;
   }
 
+  bool containsAP(String mac) {
+    for (var element in ScanScreen.apMap) {
+      if (element['mac'] == mac) return true;
+    }
+    return false;
+  }
+
   IconButton setIconButton() {
-    if (ScanScreen.apMap.containsKey("${widget.ssid} ${widget.bssid}")) {
-      ScanScreen.apMap.addAll({"${widget.ssid} ${widget.bssid}": widget.dbm});
+    if (containsAP(widget.bssid)) {
+      ScanScreen.apMap.removeWhere((element) => element["mac"] == widget.bssid);
+      ScanScreen.apMap.add({
+        "ssid": widget.ssid,
+        "mac": widget.bssid,
+        "quality": widget.dbm.abs()
+      });
       return IconButton(
         icon: const Icon(
           Icons.check_circle,
@@ -34,7 +46,8 @@ class _ApInfoState extends State<ApInfo> {
         ),
         onPressed: () {
           setState(() {
-            ScanScreen.apMap.remove("${widget.ssid} ${widget.bssid}");
+            ScanScreen.apMap
+                .removeWhere((element) => element["mac"] == widget.bssid);
           });
         },
       );
@@ -47,8 +60,11 @@ class _ApInfoState extends State<ApInfo> {
         ),
         onPressed: () {
           setState(() {
-            ScanScreen.apMap
-                .addAll({"${widget.ssid} ${widget.bssid}": widget.dbm});
+            ScanScreen.apMap.add({
+              "ssid": widget.ssid,
+              "mac": widget.bssid,
+              "quality": widget.dbm.abs()
+            });
           });
         },
       );
