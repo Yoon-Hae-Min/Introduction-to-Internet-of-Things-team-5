@@ -25,6 +25,7 @@ class _ScanScreenState extends State<ScanScreen> {
   late bool isScanSuccess = false;
 
   Future<bool> getScanResult(BuildContext context) async {
+    ScanScreen.accessPoints.clear;
     setState(() {
       isLoading = true;
     });
