@@ -20,8 +20,17 @@ class _PushDialogState extends State<PushDialog> {
   Map<String, dynamic> pushJson(String spot) {
     Map<String, dynamic> jsonData = {};
     List<Map<String, dynamic>> aplist = [];
-    for (var element in ScanScreen.apJson) {
-      aplist.add(element);
+    // for (var element in ScanScreen.apJson) {
+    //   aplist.add(element);
+    // }
+    for (var element in ScanScreen.accessPoints) {
+      if (element.ssid == "GC_free_WiFi" || element.ssid == "eduroam") {
+        aplist.add({
+          "ssid": element.ssid,
+          "bssid": element.bssid,
+          "quality": element.level.abs(),
+        });
+      }
     }
     jsonData.addAll({"name": spot, "data": aplist});
     return jsonData;
