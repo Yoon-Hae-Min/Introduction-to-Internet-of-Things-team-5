@@ -5,9 +5,8 @@ import 'package:wifi_scan/wifi_scan.dart';
 import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
 
 class ScanScreen extends StatefulWidget {
-  static List<WiFiAccessPoint> accessPoints = <WiFiAccessPoint>[];
-  static List<Map<String, dynamic>> apMap = [];
-  static List<Map<String, dynamic>> apJson = [];
+  static List<WiFiAccessPoint> accessPoints = [];
+  static List<WiFiAccessPoint> gcEdu = [];
   static int pushStringNum = 0;
   const ScanScreen({super.key});
 
@@ -45,11 +44,22 @@ class _ScanScreenState extends State<ScanScreen> {
     results.sort((a, b) => a.level.compareTo(b.level));
     ScanScreen.accessPoints = results.reversed.toList();
 
+    filterWifi(); //Filtering GC_free_Wifi, eduroam
+
     setState(() {
       isLoading = false;
     });
 
     return true;
+  }
+
+  void filterWifi() {
+    ScanScreen.gcEdu.clear();
+    for (var wifi in ScanScreen.accessPoints) {
+      if (wifi.ssid == "GC_free_WiFi" || wifi.ssid == "eduroam") {
+        ScanScreen.gcEdu.add(wifi);
+      }
+    }
   }
 
   @override
@@ -73,7 +83,7 @@ class _ScanScreenState extends State<ScanScreen> {
                         ? AnimationLimiter(
                             child: ListView.separated(
                               scrollDirection: Axis.vertical,
-                              itemCount: ScanScreen.accessPoints.length,
+                              itemCount: ScanScreen.gcEdu.length,
                               itemBuilder: (context, index) {
                                 return AnimationConfiguration.staggeredList(
                                   position: index,
@@ -81,12 +91,9 @@ class _ScanScreenState extends State<ScanScreen> {
                                     child: SlideAnimation(
                                       verticalOffset: 50,
                                       child: ApInfo(
-                                        ssid:
-                                            ScanScreen.accessPoints[index].ssid,
-                                        bssid: ScanScreen
-                                            .accessPoints[index].bssid,
-                                        dbm: ScanScreen
-                                            .accessPoints[index].level,
+                                        ssid: ScanScreen.gcEdu[index].ssid,
+                                        bssid: ScanScreen.gcEdu[index].bssid,
+                                        dbm: ScanScreen.gcEdu[index].level,
                                       ),
                                     ),
                                   ),

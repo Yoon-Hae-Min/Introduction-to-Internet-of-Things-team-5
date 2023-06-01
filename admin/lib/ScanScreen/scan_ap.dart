@@ -1,4 +1,3 @@
-import 'package:admin/ScanScreen/scan_main.dart';
 import 'package:flutter/material.dart';
 
 class ApInfo extends StatefulWidget {
@@ -23,55 +22,6 @@ class _ApInfoState extends State<ApInfo> {
     return Icons.question_mark;
   }
 
-  bool containsAP(String bssid) {
-    for (var element in ScanScreen.apMap) {
-      if (element['bssid'] == bssid) return true;
-    }
-    return false;
-  }
-
-  IconButton setIconButton() {
-    if (containsAP(widget.bssid)) {
-      ScanScreen.apMap
-          .removeWhere((element) => element["bssid"] == widget.bssid);
-      ScanScreen.apMap.add({
-        "ssid": widget.ssid,
-        "bssid": widget.bssid,
-        "quality": widget.dbm.abs()
-      });
-      return IconButton(
-        icon: const Icon(
-          Icons.check_circle,
-          size: 36,
-          color: Colors.green,
-        ),
-        onPressed: () {
-          setState(() {
-            ScanScreen.apMap
-                .removeWhere((element) => element["bssid"] == widget.bssid);
-          });
-        },
-      );
-    } else {
-      return IconButton(
-        icon: const Icon(
-          Icons.check_circle_outline,
-          size: 36,
-          color: Colors.black,
-        ),
-        onPressed: () {
-          setState(() {
-            ScanScreen.apMap.add({
-              "ssid": widget.ssid,
-              "bssid": widget.bssid,
-              "quality": widget.dbm.abs()
-            });
-          });
-        },
-      );
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -90,20 +40,23 @@ class _ApInfoState extends State<ApInfo> {
             size: 46,
             color: Colors.black,
           ),
-          SizedBox(
-            width: 120,
+          Container(
+            width: MediaQuery.of(context).size.width / 2,
+            padding: const EdgeInsets.symmetric(vertical: 0, horizontal: 20),
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
                   widget.ssid,
-                  style: const TextStyle(fontSize: 20),
+                  style: const TextStyle(
+                      fontSize: 25, fontWeight: FontWeight.w400),
                   overflow: TextOverflow.ellipsis,
                   maxLines: 1,
                 ),
                 Text(
                   widget.bssid,
+                  style: const TextStyle(fontSize: 15),
                   overflow: TextOverflow.ellipsis,
                   maxLines: 1,
                 )
@@ -114,27 +67,13 @@ class _ApInfoState extends State<ApInfo> {
             children: [
               Text(
                 "${widget.dbm}",
-                style: const TextStyle(fontSize: 24),
+                style:
+                    const TextStyle(fontSize: 28, fontWeight: FontWeight.w500),
               ),
               const Text(" dBm"),
-            ],
-          ),
-          Row(
-            children: [
-              const VerticalDivider(
-                indent: 12,
-                endIndent: 12,
-                thickness: 2,
-                color: Colors.black26,
-              ),
-              Column(
-                children: [
-                  const SizedBox(
-                    height: 14,
-                  ),
-                  setIconButton()
-                ],
-              ),
+              SizedBox(
+                width: MediaQuery.of(context).size.width / 15,
+              )
             ],
           ),
         ],
