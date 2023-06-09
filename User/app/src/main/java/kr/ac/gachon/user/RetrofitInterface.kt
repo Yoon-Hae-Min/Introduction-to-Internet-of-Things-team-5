@@ -8,8 +8,8 @@ import retrofit2.http.POST
 
 interface RetrofitInterface {
 
-    // GET API for getting my page
-    @POST("/getpoint")
+    // POST API for predicting my location
+    @POST("/predict")
     fun getMyPoint(
         @Body getPointRequest: GetPointRequest
     ): Call<GetPointResponse>

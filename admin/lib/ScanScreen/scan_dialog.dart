@@ -15,6 +15,7 @@ class _PushDialogState extends State<PushDialog> {
   final urlTrain = 'http://158.247.215.83:5000/train'; //train -> Push Button
   final urlPredict =
       'http://158.247.215.83:5000/predict'; //predict -> Predict Button
+
   late Future<Response> postFuture;
 
   Map<String, dynamic> pushJson(String spot) {
