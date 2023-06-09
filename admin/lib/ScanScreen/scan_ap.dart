@@ -23,21 +23,20 @@ class _ApInfoState extends State<ApInfo> {
     return Icons.question_mark;
   }
 
-  bool containsAP(String bssid) {
-    for (var element in ScanScreen.apMap) {
-      if (element['bssid'] == bssid) return true;
+  bool containsAPmap() {
+    for (var apInfo in ScanScreen.apMap) {
+      if (apInfo['bssid'] == widget.bssid) return true;
     }
     return false;
   }
 
   IconButton setIconButton() {
-    if (containsAP(widget.bssid)) {
-      ScanScreen.apMap
-          .removeWhere((element) => element["bssid"] == widget.bssid);
+    if (containsAPmap()) {
+      ScanScreen.apMap.removeWhere((apInfo) => apInfo["bssid"] == widget.bssid);
       ScanScreen.apMap.add({
         "ssid": widget.ssid,
         "bssid": widget.bssid,
-        "quality": widget.dbm.abs()
+        "quality": widget.dbm,
       });
       return IconButton(
         icon: const Icon(
@@ -64,7 +63,7 @@ class _ApInfoState extends State<ApInfo> {
             ScanScreen.apMap.add({
               "ssid": widget.ssid,
               "bssid": widget.bssid,
-              "quality": widget.dbm.abs()
+              "quality": widget.dbm,
             });
           });
         },

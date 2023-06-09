@@ -36,6 +36,7 @@ dependencies:
   wifi_scan: ^0.4.0+1
   flutter_staggered_animations: ^1.1.1
   dio: ^5.1.2
+  fluttertoast: ^8.2.2
 
 dev_dependencies:
   flutter_test:

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'scan_main.dart';
 import 'package:dio/dio.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 
 class PushDialog extends StatefulWidget {
   const PushDialog({super.key});
@@ -11,14 +12,21 @@ class PushDialog extends StatefulWidget {
 
 class _PushDialogState extends State<PushDialog> {
   final textController = TextEditingController();
-  final _url = 'http://158.247.215.83:5000/train';
+  final urlTrain = 'http://158.247.215.83:5000/train'; //train -> Push Button
+  final urlPredict =
+      'http://158.247.215.83:5000/predict'; //predict -> Predict Button
+
   late Future<Response> postFuture;
 
   Map<String, dynamic> pushJson(String spot) {
     Map<String, dynamic> jsonData = {};
     List<Map<String, dynamic>> aplist = [];
-    for (var element in ScanScreen.apJson) {
-      aplist.add(element);
+    for (var apinfo in ScanScreen.apMap) {
+      aplist.add({
+        'ssid': apinfo['ssid'],
+        'bssid': apinfo['bssid'],
+        'quality': apinfo['quality'].abs(),
+      });
     }
     jsonData.addAll({"name": spot, "data": aplist});
     return jsonData;
@@ -27,25 +35,12 @@ class _PushDialogState extends State<PushDialog> {
 //Function to send only information of ap detected in scan
   String pushString() {
     late String pushAPs = "";
-    late List<String> compareString = [];
-    ScanScreen.apJson.clear();
     ScanScreen.pushStringNum = 0;
 
-    for (int i = 0; i < ScanScreen.accessPoints.length; i++) {
-      compareString.add(ScanScreen.accessPoints[i].bssid);
-    }
-
-    for (var element in ScanScreen.apMap) {
-      if (compareString.contains(element['bssid'])) {
-        pushAPs +=
-            'ssid : ${element['ssid']}, bssid : ${element['bssid']}, quality : ${element['quality']}\n';
-        ScanScreen.apJson.add({
-          'ssid': element['ssid'],
-          'bssid': element['bssid'],
-          'quality': element['quality']
-        });
-        ScanScreen.pushStringNum++;
-      }
+    for (var apInfo in ScanScreen.apMap) {
+      pushAPs +=
+          '${apInfo['ssid']}\n${apInfo['bssid']} : ${apInfo['quality']}\n\n';
+      ScanScreen.pushStringNum++;
     }
     return pushAPs;
   }
@@ -60,15 +55,21 @@ class _PushDialogState extends State<PushDialog> {
         children: [
           Container(
               width: MediaQuery.of(context).size.width,
-              height: MediaQuery.of(context).size.height / 4,
-              color: Colors.blueGrey.shade200,
+              height: MediaQuery.of(context).size.height / 3.3,
+              decoration: BoxDecoration(
+                  color: Colors.blueGrey.shade200,
+                  borderRadius: BorderRadius.circular(10)),
               padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 20),
               child: SingleChildScrollView(
                 child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
                       pushString(),
-                      style: const TextStyle(fontSize: 13, color: Colors.white),
+                      style: const TextStyle(
+                          fontSize: 14,
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold),
                     ),
                   ],
                 ),
@@ -76,29 +77,62 @@ class _PushDialogState extends State<PushDialog> {
           const SizedBox(
             height: 10,
           ),
-          SizedBox(
-            width: MediaQuery.of(context).size.width / 3,
-            height: 30,
-            child: TextField(
-              controller: textController,
-              maxLines: 1,
-              keyboardType: TextInputType.multiline,
-              decoration: const InputDecoration(
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.all(Radius.circular(50.0)),
-                  borderSide: BorderSide.none,
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            children: [
+              SizedBox(
+                width: MediaQuery.of(context).size.width / 3,
+                height: 30,
+                child: TextField(
+                  controller: textController,
+                  maxLines: 1,
+                  keyboardType: TextInputType.multiline,
+                  decoration: const InputDecoration(
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.all(Radius.circular(50.0)),
+                      borderSide: BorderSide.none,
+                    ),
+                    hintText: 'Spot',
+                    hintStyle: TextStyle(
+                      color: Colors.white,
+                      fontSize: 14,
+                    ),
+                    contentPadding:
+                        EdgeInsets.symmetric(vertical: 10.0, horizontal: 15.0),
+                    filled: true,
+                    fillColor: Colors.black26,
+                  ),
                 ),
-                hintText: 'Spot',
-                hintStyle: TextStyle(
-                  color: Colors.white,
-                  fontSize: 14,
-                ),
-                contentPadding:
-                    EdgeInsets.symmetric(vertical: 10.0, horizontal: 15.0),
-                filled: true,
-                fillColor: Colors.black26,
               ),
-            ),
+              ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.blue,
+                    fixedSize: Size(
+                      MediaQuery.of(context).size.width / 5,
+                      MediaQuery.of(context).size.height / 30,
+                    ),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(40),
+                    ),
+                  ),
+                  onPressed: () async {
+                    Map<String, dynamic> predict = pushJson('None');
+                    predict.remove('name');
+                    var response = await Dio().post(
+                      urlPredict,
+                      data: predict,
+                    );
+                    Fluttertoast.showToast(
+                        msg: response.data.toString(),
+                        toastLength: Toast.LENGTH_SHORT,
+                        gravity: ToastGravity.CENTER,
+                        timeInSecForIosWeb: 1,
+                        backgroundColor: Colors.red,
+                        textColor: Colors.white,
+                        fontSize: 16.0);
+                  },
+                  child: const Text("Predict")),
+            ],
           ),
           const SizedBox(
             height: 10,
@@ -140,7 +174,7 @@ class _PushDialogState extends State<PushDialog> {
                 ),
                 onPressed: () {
                   postFuture = Dio().post(
-                    _url,
+                    urlTrain,
                     data: pushJson(textController.text),
                   ); //Avoid futurebuilder duplicate calls
                   showDialog(
