@@ -12,25 +12,20 @@ class PushDialog extends StatefulWidget {
 
 class _PushDialogState extends State<PushDialog> {
   final textController = TextEditingController();
-  //final _url = 'http://43.200.252.1:8080/point'; //해민님 서버
-  final _url = 'http://158.247.215.83:5000/train'; //상연님 서버
-  final _url2 = 'http://158.247.215.83:5000/predict'; //상연님 서버
+  final urlTrain = 'http://158.247.215.83:5000/train'; //train -> Push Button
+  final urlPredict =
+      'http://158.247.215.83:5000/predict'; //predict -> Predict Button
   late Future<Response> postFuture;
 
   Map<String, dynamic> pushJson(String spot) {
     Map<String, dynamic> jsonData = {};
     List<Map<String, dynamic>> aplist = [];
-    // for (var element in ScanScreen.apJson) {
-    //   aplist.add(element);
-    // }
-    for (var element in ScanScreen.accessPoints) {
-      if (element.ssid == "GC_free_WiFi" || element.ssid == "eduroam") {
-        aplist.add({
-          "ssid": element.ssid,
-          "bssid": element.bssid,
-          "quality": element.level.abs(),
-        });
-      }
+    for (var apinfo in ScanScreen.apMap) {
+      aplist.add({
+        'ssid': apinfo['ssid'],
+        'bssid': apinfo['bssid'],
+        'quality': apinfo['quality'].abs(),
+      });
     }
     jsonData.addAll({"name": spot, "data": aplist});
     return jsonData;
@@ -39,25 +34,12 @@ class _PushDialogState extends State<PushDialog> {
 //Function to send only information of ap detected in scan
   String pushString() {
     late String pushAPs = "";
-    late List<String> compareString = [];
-    ScanScreen.apJson.clear();
     ScanScreen.pushStringNum = 0;
 
-    for (int i = 0; i < ScanScreen.accessPoints.length; i++) {
-      compareString.add(ScanScreen.accessPoints[i].bssid);
-    }
-
-    for (var element in ScanScreen.apMap) {
-      if (compareString.contains(element['bssid'])) {
-        pushAPs +=
-            'ssid : ${element['ssid']}, bssid : ${element['bssid']}, quality : ${element['quality']}\n';
-        ScanScreen.apJson.add({
-          'ssid': element['ssid'],
-          'bssid': element['bssid'],
-          'quality': element['quality']
-        });
-        ScanScreen.pushStringNum++;
-      }
+    for (var apInfo in ScanScreen.apMap) {
+      pushAPs +=
+          '${apInfo['ssid']}\n${apInfo['bssid']} : ${apInfo['quality']}\n\n';
+      ScanScreen.pushStringNum++;
     }
     return pushAPs;
   }
@@ -72,15 +54,21 @@ class _PushDialogState extends State<PushDialog> {
         children: [
           Container(
               width: MediaQuery.of(context).size.width,
-              height: MediaQuery.of(context).size.height / 4,
-              color: Colors.blueGrey.shade200,
+              height: MediaQuery.of(context).size.height / 3.3,
+              decoration: BoxDecoration(
+                  color: Colors.blueGrey.shade200,
+                  borderRadius: BorderRadius.circular(10)),
               padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 20),
               child: SingleChildScrollView(
                 child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
                       pushString(),
-                      style: const TextStyle(fontSize: 13, color: Colors.white),
+                      style: const TextStyle(
+                          fontSize: 14,
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold),
                     ),
                   ],
                 ),
@@ -127,10 +115,10 @@ class _PushDialogState extends State<PushDialog> {
                     ),
                   ),
                   onPressed: () async {
-                    Map<String, dynamic> predict = pushJson("asdfs");
+                    Map<String, dynamic> predict = pushJson('None');
                     predict.remove('name');
                     var response = await Dio().post(
-                      _url2,
+                      urlPredict,
                       data: predict,
                     );
                     Fluttertoast.showToast(
@@ -185,7 +173,7 @@ class _PushDialogState extends State<PushDialog> {
                 ),
                 onPressed: () {
                   postFuture = Dio().post(
-                    _url,
+                    urlTrain,
                     data: pushJson(textController.text),
                   ); //Avoid futurebuilder duplicate calls
                   showDialog(
