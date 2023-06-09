@@ -77,6 +77,7 @@ class _FilterDialogState extends State<FilterDialog> {
       actions: [
         ElevatedButton(
             onPressed: () {
+              widget.setparent();
               Navigator.pop(context);
               FocusScope.of(context).unfocus();
             },
@@ -95,7 +96,6 @@ class _FilterDialogState extends State<FilterDialog> {
           } else {
             ScanScreen.filterBSSID.remove(id);
           }
-          widget.setparent();
         },
         child: Container(
           width: MediaQuery.of(context).size.width / 10,

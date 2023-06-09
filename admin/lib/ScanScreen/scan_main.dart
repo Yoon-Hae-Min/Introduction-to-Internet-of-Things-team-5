@@ -24,7 +24,7 @@ class _ScanScreenState extends State<ScanScreen> {
     fontWeight: FontWeight.bold,
   );
 
-  bool scanORbuild = false;
+  bool isScanBuild = false;
   late Future<bool> isScanSuccess;
 
   final TextEditingController _ssidController = TextEditingController();
@@ -128,16 +128,11 @@ class _ScanScreenState extends State<ScanScreen> {
                                               .add(_ssidController.text);
                                           _ssidController.clear();
                                         }
-
                                         if (_bssidController.text != '') {
                                           ScanScreen.filterBSSID
                                               .add(_bssidController.text);
                                           _bssidController.clear();
                                         }
-
-                                        setState(() {
-                                          scanORbuild = false;
-                                        });
                                         FocusScope.of(context).unfocus();
                                       },
                                       icon: const Icon(Icons.input_rounded),
@@ -168,7 +163,7 @@ class _ScanScreenState extends State<ScanScreen> {
                     )),
                 Expanded(
                   flex: 8,
-                  child: scanORbuild ? scanList() : rebuildList(),
+                  child: isScanBuild ? scanBuildList() : rebuildList(),
                 ),
                 Expanded(
                   flex: 1,
@@ -190,7 +185,7 @@ class _ScanScreenState extends State<ScanScreen> {
                         onPressed: () async {
                           ScanScreen.apMap.clear();
                           isScanSuccess = getScanResult(context);
-                          scanORbuild = true;
+                          isScanBuild = true;
                           setState(() {});
                         },
                         child: Text("Scan", style: _textStyle),
@@ -229,7 +224,7 @@ class _ScanScreenState extends State<ScanScreen> {
   }
 
   Future<bool> getScanResult(BuildContext context) async {
-    ScanScreen.accessPoints.clear;
+    ScanScreen.accessPoints.clear();
     var canScan =
         await WiFiScan.instance.canStartScan(); // check if can-startScan
     if (canScan != CanStartScan.yes) {
@@ -247,9 +242,9 @@ class _ScanScreenState extends State<ScanScreen> {
     return true;
   }
 
-  FutureBuilder scanList() {
+  FutureBuilder scanBuildList() {
     ScanScreen.apMap.clear();
-    scanORbuild = false;
+    isScanBuild = false;
     return FutureBuilder(
         future: isScanSuccess,
         builder: (context, snapshot) {
@@ -300,22 +295,9 @@ class _ScanScreenState extends State<ScanScreen> {
   }
 
   ListView rebuildList() {
-    ScanScreen.apMap.clear();
     return ListView.separated(
       cacheExtent: double.infinity,
       itemBuilder: (context, index) {
-        if (ScanScreen.filterSSID
-                .contains(ScanScreen.accessPoints[index].ssid) ||
-            ScanScreen.filterBSSID
-                .contains(ScanScreen.accessPoints[index].bssid) ||
-            ScanScreen.selectAll) {
-          ScanScreen.apMap.add({
-            "ssid": ScanScreen.accessPoints[index].ssid,
-            "bssid": ScanScreen.accessPoints[index].bssid,
-            "quality": ScanScreen.accessPoints[index].level,
-          });
-        }
-
         return ApInfo(
           ssid: ScanScreen.accessPoints[index].ssid,
           bssid: ScanScreen.accessPoints[index].bssid,
@@ -371,6 +353,14 @@ class _ScanScreenState extends State<ScanScreen> {
         onPressed: () {
           setState(() {
             ScanScreen.selectAll = true;
+            ScanScreen.apMap.clear();
+            for (var apinfo in ScanScreen.accessPoints) {
+              ScanScreen.apMap.add({
+                'ssid': apinfo.ssid,
+                'bssid': apinfo.bssid,
+                'quality': apinfo.level
+              });
+            }
           });
         },
         icon: const Icon(Icons.check_circle_outline),
