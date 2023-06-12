@@ -23,7 +23,6 @@ import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
 import java.util.*
-import kotlin.math.absoluteValue
 import kotlin.properties.Delegates
 
 
@@ -35,7 +34,7 @@ class NavigationActivity : BaseActivity<ActivityNavigationBinding>(ActivityNavig
     private val mLastMagnetometer = FloatArray(3)
     private var mLastAccelerometerSet = false
     private var mLastMagnetometerSet = false
-    private var mCurrentDegree = 0f
+    private var mCurrentRotateValue = 0f
     private lateinit var wifiManager: WifiManager
     private var bssid by Delegates.notNull<String>()
     private var ssid by Delegates.notNull<String>()
@@ -112,7 +111,7 @@ class NavigationActivity : BaseActivity<ActivityNavigationBinding>(ActivityNavig
                 //좌우회전
                 binding.tvSpeedContent.text = "roll=$roll"
                 // 이미지 회전
-                rotateArrow(90F)
+                rotateArrow(250F)
             }
         }
     }
@@ -147,25 +146,27 @@ class NavigationActivity : BaseActivity<ActivityNavigationBinding>(ActivityNavig
         postMyPoint(PostPointRequest(dataList))
     }
 
-    // Rotate arrow image
-    // value = 0F -> 앞으로 가는 화살표
-    // value = -90F -> 왼쪽 화살표
-    // value = 90F -> 오른쪽 화살표
-    // value = 180F -> 뒤로 가는 화살표
-    private fun rotateArrow(value: Float) {
+    // Rotate arrow image according to degree
+    // 0F -> 앞으로 가는 화살표 / -90F -> 왼쪽 화살표 / 90F -> 오른쪽 화살표 / 180F -> 뒤로 가는 화살표
+    private fun rotateArrow(degreeValue: Float) {
+        // Convert degreeValue to rotateValue
+        var rotateValue = degreeValue
+        if (degreeValue < 0) {
+            rotateValue = -(degreeValue - 180)
+        }
+        // Rotate image
         val ra = RotateAnimation(
-            mCurrentDegree,
-            value,
+            mCurrentRotateValue,
+            rotateValue,
             Animation.RELATIVE_TO_SELF, 0.5f,
-            Animation.RELATIVE_TO_SELF,
-            0.5f
+            Animation.RELATIVE_TO_SELF, 0.5f
         )
         ra.duration = 250
         ra.fillAfter = true
 
         binding.run {
             imgNaviArrow.startAnimation(ra)
-            mCurrentDegree = value
+            mCurrentRotateValue = rotateValue
         }
     }
 
@@ -203,7 +204,6 @@ class NavigationActivity : BaseActivity<ActivityNavigationBinding>(ActivityNavig
                     val location = body?.start_direction
                     Log.d("post mypoint", "$location")
                     binding.tvMyPoint.text = "테스트용: 이곳은 $location"
-
                 } else {
                     // If fail, show toast message to user
                     showCustomToast("네트워크 연결에 실패했습니다")
