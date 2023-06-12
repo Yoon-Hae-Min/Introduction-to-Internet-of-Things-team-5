@@ -10,7 +10,7 @@ import java.util.concurrent.TimeUnit
 
 class ApplicationClass : Application() {
     private val SERVER_URL = BuildConfig.SERVER_URL
-    private val API_URL = "http://$SERVER_URL:5000"
+    private val API_URL = "http://$SERVER_URL:5000/"
 
     companion object {
         // Retrofit instance

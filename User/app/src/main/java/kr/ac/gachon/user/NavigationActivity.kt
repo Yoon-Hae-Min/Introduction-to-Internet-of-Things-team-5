@@ -1,7 +1,6 @@
 package kr.ac.gachon.user
 
 import android.Manifest
-import android.R.attr.level
 import android.content.Context
 import android.content.pm.PackageManager
 import android.hardware.Sensor
@@ -11,6 +10,7 @@ import android.hardware.SensorManager
 import android.net.wifi.WifiManager
 import android.os.Build
 import android.os.Bundle
+import android.util.Log
 import android.view.animation.Animation
 import android.view.animation.RotateAnimation
 import androidx.annotation.RequiresApi
@@ -18,13 +18,11 @@ import androidx.core.app.ActivityCompat
 import kr.ac.gachon.user.config.ApplicationClass
 import kr.ac.gachon.user.config.BaseActivity
 import kr.ac.gachon.user.databinding.ActivityNavigationBinding
-import kr.ac.gachon.user.model.Data
-import kr.ac.gachon.user.model.GetPointRequest
-import kr.ac.gachon.user.model.GetPointResponse
+import kr.ac.gachon.user.model.*
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
-import kotlin.math.absoluteValue
+import java.util.*
 import kotlin.properties.Delegates
 
 
@@ -36,12 +34,12 @@ class NavigationActivity : BaseActivity<ActivityNavigationBinding>(ActivityNavig
     private val mLastMagnetometer = FloatArray(3)
     private var mLastAccelerometerSet = false
     private var mLastMagnetometerSet = false
-    private var mCurrentDegree = 0f
+    private var mCurrentRotateValue = 0f
     private lateinit var wifiManager: WifiManager
     private var bssid by Delegates.notNull<String>()
     private var ssid by Delegates.notNull<String>()
     private var rssi by Delegates.notNull<Int>()
-    private var dataList = arrayListOf<Data>()
+    private lateinit var currentLocation: String
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -60,7 +58,14 @@ class NavigationActivity : BaseActivity<ActivityNavigationBinding>(ActivityNavig
         mSensorManager?.registerListener(this, mAccelerometer, SensorManager.SENSOR_DELAY_UI)
         mSensorManager?.registerListener(this, mMagnetometer, SensorManager.SENSOR_DELAY_UI)
 
-        getWifiStrengthPercentage(this)
+        // Repeat every second to get rssi values
+        val timer = Timer()
+        val timerTask: TimerTask = object : TimerTask() {
+            override fun run() {
+                getWifiStrengthPercentage(this@NavigationActivity)
+            }
+        }
+        timer.schedule(timerTask, 0, 1000)
     }
 
     override fun onPause() {
@@ -106,7 +111,7 @@ class NavigationActivity : BaseActivity<ActivityNavigationBinding>(ActivityNavig
                 //좌우회전
                 binding.tvSpeedContent.text = "roll=$roll"
                 // 이미지 회전
-                rotateArrow(90F)
+                rotateArrow(250F)
             }
         }
     }
@@ -122,60 +127,90 @@ class NavigationActivity : BaseActivity<ActivityNavigationBinding>(ActivityNavig
         }
         wifiManager = applicationContext.getSystemService(Context.WIFI_SERVICE) as WifiManager
         val scanResults = wifiManager.scanResults
+        Log.e("scan data", "$scanResults")
+        var dataList = arrayListOf<Data>()
         for (result in scanResults) {
-            bssid = wifiManager.connectionInfo.bssid
-            ssid = wifiManager.connectionInfo.ssid
-            rssi = wifiManager.connectionInfo.rssi.absoluteValue
-            dataList.add(Data(ssid, bssid, rssi))
-            binding.tvMyPoint.text = "$ssid, $bssid, $rssi"
+            bssid = result.BSSID
+            ssid = result.SSID
+            if (ssid == "GC_free_WiFi" || ssid == "eduroam") {
+                rssi = result.level
+                if (rssi < 0) {
+                    rssi *= -1
+                }
+                dataList.add(Data(ssid, bssid, rssi))
+            }
         }
+        Log.e("dataList", "${dataList}")
 
-        // Test API
-        getMyPoint()
+        // Post my point
+        postMyPoint(PostPointRequest(dataList))
     }
 
-    // Rotate arrow image
-    // value = 0F -> 앞으로 가는 화살표
-    // value = -90F -> 왼쪽 화살표
-    // value = 90F -> 오른쪽 화살표
-    // value = 180F -> 뒤로 가는 화살표
-    private fun rotateArrow(value: Float) {
+    // Rotate arrow image according to degree
+    // 0F -> 앞으로 가는 화살표 / -90F -> 왼쪽 화살표 / 90F -> 오른쪽 화살표 / 180F -> 뒤로 가는 화살표
+    private fun rotateArrow(degreeValue: Float) {
+        // Convert degreeValue to rotateValue
+        var rotateValue = degreeValue
+        if (degreeValue < 0) {
+            rotateValue = -(degreeValue - 180)
+        }
+        // Rotate image
         val ra = RotateAnimation(
-            mCurrentDegree,
-            value,
+            mCurrentRotateValue,
+            rotateValue,
             Animation.RELATIVE_TO_SELF, 0.5f,
-            Animation.RELATIVE_TO_SELF,
-            0.5f
+            Animation.RELATIVE_TO_SELF, 0.5f
         )
         ra.duration = 250
         ra.fillAfter = true
 
         binding.run {
             imgNaviArrow.startAnimation(ra)
-            mCurrentDegree = value
+            mCurrentRotateValue = rotateValue
         }
     }
 
-    // Send and Get my point to server through API
-    private fun getMyPoint() {
+    // Send and Post my point to server through API
+    private fun postMyPoint(dataList: PostPointRequest) {
         val service = ApplicationClass.sRetrofit.create(RetrofitInterface::class.java)
-        val request = GetPointRequest(
-            dataList
-        )
 
-        service.getMyPoint(request).enqueue(object : Callback<GetPointResponse> {
-            override fun onResponse(call: Call<GetPointResponse>, response: Response<GetPointResponse>) {
+        service.postMyPoint(dataList).enqueue(object : Callback<PostPointResponse> {
+            override fun onResponse(call: Call<PostPointResponse>, response: Response<PostPointResponse>) {
                 if (response.isSuccessful) {
                     val body = response.body()
-                    val location = body?.location
-                    binding.tvMyPoint.text = location
+                    currentLocation = body?.location.toString()
+                    Log.d("post mypoint", "$currentLocation")
+                    binding.tvMyPoint.text = "현재 위치: $currentLocation"
                 } else {
                     // If fail, show toast message to user
                     showCustomToast("네트워크 연결에 실패했습니다")
                 }
             }
             // If fail, show toast message to user
-            override fun onFailure(call: Call<GetPointResponse>, t: Throwable) {
+            override fun onFailure(call: Call<PostPointResponse>, t: Throwable) {
+                showCustomToast("네트워크 연결에 실패했습니다")
+            }
+        })
+    }
+
+    // Navigate path from current location to destination through API
+    private fun navigatePath(dataList: PostPointRequest) {
+        val service = ApplicationClass.sRetrofit.create(RetrofitInterface::class.java)
+        val req = PostPathRequest(currentLocation, "411")
+        service.postPath(req).enqueue(object : Callback<PostPathResponse> {
+            override fun onResponse(call: Call<PostPathResponse>, response: Response<PostPathResponse>) {
+                if (response.isSuccessful) {
+                    val body = response.body()
+                    val location = body?.start_direction
+                    Log.d("post mypoint", "$location")
+                    binding.tvMyPoint.text = "테스트용: 이곳은 $location"
+                } else {
+                    // If fail, show toast message to user
+                    showCustomToast("네트워크 연결에 실패했습니다")
+                }
+            }
+            // If fail, show toast message to user
+            override fun onFailure(call: Call<PostPathResponse>, t: Throwable) {
                 showCustomToast("네트워크 연결에 실패했습니다")
             }
         })

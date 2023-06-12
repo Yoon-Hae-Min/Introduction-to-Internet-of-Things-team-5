@@ -3,24 +3,28 @@ package kr.ac.gachon.user
 import android.R
 import android.content.Intent
 import android.os.Bundle
+import android.util.Log
 import android.view.View
 import android.widget.AdapterView
 import android.widget.ArrayAdapter
 import android.widget.Spinner
+import kr.ac.gachon.user.config.ApplicationClass
 import kr.ac.gachon.user.config.BaseActivity
 import kr.ac.gachon.user.databinding.ActivitySetDestBinding
+import kr.ac.gachon.user.model.GetDestinationsResponse
+import retrofit2.Call
+import retrofit2.Callback
+import retrofit2.Response
 
 // Page to set destination from the list
 class SetDestActivity : BaseActivity<ActivitySetDestBinding>(ActivitySetDestBinding::inflate) {
+    private var destList: ArrayList<String> = arrayListOf()
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        // 10 Destinations
-        val destList: ArrayList<String> = arrayListOf(
-            "AI - 414호", "AI - 415호", "AI - 416호", "AI - 417호", "AI - 418호",
-            "AI - 419호", "AI - 420호", "AI - 421호", "AI - 422호", "AI - 423호"
-        )
-        // Set spinner data
-        setSpinner(binding.spnDest, destList)
+
+        // Get destination list
+        getDestinations()
 
         // Set click event of start navigation btn
         binding.btnNavi.setOnClickListener {
@@ -32,9 +36,43 @@ class SetDestActivity : BaseActivity<ActivitySetDestBinding>(ActivitySetDestBind
         }
     }
 
+    // Get destination list through API
+    private fun getDestinations() {
+        val service = ApplicationClass.sRetrofit.create(RetrofitInterface::class.java)
+        service.getDestinations().enqueue(object : Callback<GetDestinationsResponse> {
+            override fun onResponse(call: Call<GetDestinationsResponse>, response: Response<GetDestinationsResponse>) {
+                if (response.isSuccessful) {
+                    val body = response.body()
+                    destList = body?.locations?.let { it } ?: return
+                    destList.sort()
+                    Log.d("get dest", "$destList")
+
+                    // Set spinner data
+                    setSpinner(binding.spnDest, destList)
+                } else {
+                    // If fail, show toast message to user
+                    showCustomToast("네트워크 연결에 실패했습니다")
+                }
+            }
+            // If fail, show toast message to user
+            override fun onFailure(call: Call<GetDestinationsResponse>, t: Throwable) {
+                showCustomToast("네트워크 연결에 실패했습니다")
+            }
+        })
+    }
+
+    // Fill data to spinner
     private fun setSpinner(spinner: Spinner, arr: ArrayList<String>) {
+        // Process data to show
+        var spinnerDataList = arrayListOf<String>()
+        for (data in arr) {
+            if (data.toIntOrNull() != null) {
+                spinnerDataList.add("AI관 - " + data + "호")
+            }
+        }
+
         // Creating adapter for spinner
-        val dataAdapter = ArrayAdapter(this, R.layout.simple_spinner_item, arr)
+        val dataAdapter = ArrayAdapter(this, R.layout.simple_spinner_item, spinnerDataList)
 
         // Drop down layout style - list view with radio button
         dataAdapter.setDropDownViewResource(R.layout.simple_spinner_dropdown_item)

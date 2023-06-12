@@ -96,7 +96,7 @@
         android:id="@+id/tv_my_point"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="My Point"
+        android:text="테스트용: "
         android:textSize="25sp"
         android:textColor="@color/black"
         app:layout_constraintTop_toBottomOf="@+id/tv_distance"

@@ -1,7 +1,7 @@
 package kr.ac.gachon.user.model
 
-// Request data class for getting my point
-data class GetPointRequest(
+// Request data class for posting my point
+data class PostPointRequest(
     val data: ArrayList<Data>
 )
 
@@ -11,7 +11,7 @@ data class Data(
     val quality: Int
 )
 
-// Response data class for getting my point
-data class GetPointResponse(
+// Response data class for posting my point
+data class PostPointResponse(
     val location: String
 )
