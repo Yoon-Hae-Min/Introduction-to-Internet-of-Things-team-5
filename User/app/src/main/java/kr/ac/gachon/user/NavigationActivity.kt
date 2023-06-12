@@ -1,7 +1,6 @@
 package kr.ac.gachon.user
 
 import android.Manifest
-import android.R.attr.level
 import android.content.Context
 import android.content.pm.PackageManager
 import android.hardware.Sensor
@@ -11,6 +10,7 @@ import android.hardware.SensorManager
 import android.net.wifi.WifiManager
 import android.os.Build
 import android.os.Bundle
+import android.util.Log
 import android.view.animation.Animation
 import android.view.animation.RotateAnimation
 import androidx.annotation.RequiresApi
@@ -19,11 +19,12 @@ import kr.ac.gachon.user.config.ApplicationClass
 import kr.ac.gachon.user.config.BaseActivity
 import kr.ac.gachon.user.databinding.ActivityNavigationBinding
 import kr.ac.gachon.user.model.Data
-import kr.ac.gachon.user.model.GetPointRequest
-import kr.ac.gachon.user.model.GetPointResponse
+import kr.ac.gachon.user.model.PostPointRequest
+import kr.ac.gachon.user.model.PostPointResponse
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
+import java.util.*
 import kotlin.math.absoluteValue
 import kotlin.properties.Delegates
 
@@ -41,7 +42,6 @@ class NavigationActivity : BaseActivity<ActivityNavigationBinding>(ActivityNavig
     private var bssid by Delegates.notNull<String>()
     private var ssid by Delegates.notNull<String>()
     private var rssi by Delegates.notNull<Int>()
-    private var dataList = arrayListOf<Data>()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -60,7 +60,14 @@ class NavigationActivity : BaseActivity<ActivityNavigationBinding>(ActivityNavig
         mSensorManager?.registerListener(this, mAccelerometer, SensorManager.SENSOR_DELAY_UI)
         mSensorManager?.registerListener(this, mMagnetometer, SensorManager.SENSOR_DELAY_UI)
 
-        getWifiStrengthPercentage(this)
+        // Repeat every second to get rssi values
+        val timer = Timer()
+        val timerTask: TimerTask = object : TimerTask() {
+            override fun run() {
+                getWifiStrengthPercentage(this@NavigationActivity)
+            }
+        }
+        timer.schedule(timerTask, 0, 1000)
     }
 
     override fun onPause() {
@@ -122,16 +129,23 @@ class NavigationActivity : BaseActivity<ActivityNavigationBinding>(ActivityNavig
         }
         wifiManager = applicationContext.getSystemService(Context.WIFI_SERVICE) as WifiManager
         val scanResults = wifiManager.scanResults
+        Log.e("scan data", "$scanResults")
+        var dataList = arrayListOf<Data>()
         for (result in scanResults) {
-            bssid = wifiManager.connectionInfo.bssid
-            ssid = wifiManager.connectionInfo.ssid
-            rssi = wifiManager.connectionInfo.rssi.absoluteValue
-            dataList.add(Data(ssid, bssid, rssi))
-            binding.tvMyPoint.text = "$ssid, $bssid, $rssi"
+            bssid = result.BSSID
+            ssid = result.SSID
+            if (ssid == "GC_free_WiFi" || ssid == "eduroam") {
+                rssi = result.level
+                if (rssi < 0) {
+                    rssi *= -1
+                }
+                dataList.add(Data(ssid, bssid, rssi))
+            }
         }
+        Log.e("dataList", "${dataList}")
 
-        // Test API
-        getMyPoint()
+        // Post my point
+        postMyPoint(PostPointRequest(dataList))
     }
 
     // Rotate arrow image
@@ -156,26 +170,24 @@ class NavigationActivity : BaseActivity<ActivityNavigationBinding>(ActivityNavig
         }
     }
 
-    // Send and Get my point to server through API
-    private fun getMyPoint() {
+    // Send and Post my point to server through API
+    private fun postMyPoint(dataList: PostPointRequest) {
         val service = ApplicationClass.sRetrofit.create(RetrofitInterface::class.java)
-        val request = GetPointRequest(
-            dataList
-        )
 
-        service.getMyPoint(request).enqueue(object : Callback<GetPointResponse> {
-            override fun onResponse(call: Call<GetPointResponse>, response: Response<GetPointResponse>) {
+        service.postMyPoint(dataList).enqueue(object : Callback<PostPointResponse> {
+            override fun onResponse(call: Call<PostPointResponse>, response: Response<PostPointResponse>) {
                 if (response.isSuccessful) {
                     val body = response.body()
                     val location = body?.location
-                    binding.tvMyPoint.text = location
+                    Log.d("post mypoint", "$location")
+                    binding.tvMyPoint.text = "테스트용: 이곳은 $location"
                 } else {
                     // If fail, show toast message to user
                     showCustomToast("네트워크 연결에 실패했습니다")
                 }
             }
             // If fail, show toast message to user
-            override fun onFailure(call: Call<GetPointResponse>, t: Throwable) {
+            override fun onFailure(call: Call<PostPointResponse>, t: Throwable) {
                 showCustomToast("네트워크 연결에 실패했습니다")
             }
         })
