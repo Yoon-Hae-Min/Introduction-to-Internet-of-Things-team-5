@@ -18,9 +18,7 @@ import androidx.core.app.ActivityCompat
 import kr.ac.gachon.user.config.ApplicationClass
 import kr.ac.gachon.user.config.BaseActivity
 import kr.ac.gachon.user.databinding.ActivityNavigationBinding
-import kr.ac.gachon.user.model.Data
-import kr.ac.gachon.user.model.PostPointRequest
-import kr.ac.gachon.user.model.PostPointResponse
+import kr.ac.gachon.user.model.*
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
@@ -42,6 +40,7 @@ class NavigationActivity : BaseActivity<ActivityNavigationBinding>(ActivityNavig
     private var bssid by Delegates.notNull<String>()
     private var ssid by Delegates.notNull<String>()
     private var rssi by Delegates.notNull<Int>()
+    private lateinit var currentLocation: String
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -178,9 +177,9 @@ class NavigationActivity : BaseActivity<ActivityNavigationBinding>(ActivityNavig
             override fun onResponse(call: Call<PostPointResponse>, response: Response<PostPointResponse>) {
                 if (response.isSuccessful) {
                     val body = response.body()
-                    val location = body?.location
-                    Log.d("post mypoint", "$location")
-                    binding.tvMyPoint.text = "테스트용: 이곳은 $location"
+                    currentLocation = body?.location.toString()
+                    Log.d("post mypoint", "$currentLocation")
+                    binding.tvMyPoint.text = "현재 위치: $currentLocation"
                 } else {
                     // If fail, show toast message to user
                     showCustomToast("네트워크 연결에 실패했습니다")
@@ -188,6 +187,30 @@ class NavigationActivity : BaseActivity<ActivityNavigationBinding>(ActivityNavig
             }
             // If fail, show toast message to user
             override fun onFailure(call: Call<PostPointResponse>, t: Throwable) {
+                showCustomToast("네트워크 연결에 실패했습니다")
+            }
+        })
+    }
+
+    // Navigate path from current location to destination through API
+    private fun navigatePath(dataList: PostPointRequest) {
+        val service = ApplicationClass.sRetrofit.create(RetrofitInterface::class.java)
+        val req = PostPathRequest(currentLocation, "411")
+        service.postPath(req).enqueue(object : Callback<PostPathResponse> {
+            override fun onResponse(call: Call<PostPathResponse>, response: Response<PostPathResponse>) {
+                if (response.isSuccessful) {
+                    val body = response.body()
+                    val location = body?.start_direction
+                    Log.d("post mypoint", "$location")
+                    binding.tvMyPoint.text = "테스트용: 이곳은 $location"
+
+                } else {
+                    // If fail, show toast message to user
+                    showCustomToast("네트워크 연결에 실패했습니다")
+                }
+            }
+            // If fail, show toast message to user
+            override fun onFailure(call: Call<PostPathResponse>, t: Throwable) {
                 showCustomToast("네트워크 연결에 실패했습니다")
             }
         })
