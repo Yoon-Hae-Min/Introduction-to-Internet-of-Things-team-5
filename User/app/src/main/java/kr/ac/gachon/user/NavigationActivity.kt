@@ -36,8 +36,6 @@ class NavigationActivity : BaseActivity<ActivityNavigationBinding>(ActivityNavig
     private val mLastAccelerometer = FloatArray(3)
     private val mLastMagnetometer = FloatArray(3)
     private val mOrientationDegrees = FloatArray(3)
-    private var mLastAccelerometerSet = false
-    private var mLastMagnetometerSet = false
     private var mCurrentRotateValue = 0f
     private lateinit var wifiManager: WifiManager
     private var bssid by Delegates.notNull<String>()
@@ -47,6 +45,7 @@ class NavigationActivity : BaseActivity<ActivityNavigationBinding>(ActivityNavig
     private var currentLocation: String = "1"
     var R = FloatArray(9)
     private lateinit var destination: String
+    private var currentFixedAngle: Float = 0F
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -58,9 +57,6 @@ class NavigationActivity : BaseActivity<ActivityNavigationBinding>(ActivityNavig
         mSensorManager = getSystemService(SENSOR_SERVICE) as SensorManager?
         mAccelerometer = mSensorManager?.getDefaultSensor(Sensor.TYPE_ACCELEROMETER)
         mMagnetometer = mSensorManager?.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD)
-
-        // Set default rotation (go straight)
-        rotateArrow(0F)
     }
 
     override fun onResume() {
@@ -86,44 +82,26 @@ class NavigationActivity : BaseActivity<ActivityNavigationBinding>(ActivityNavig
         mSensorManager?.unregisterListener(this, mMagnetometer)
     }
 
-//    fun computeOrientation(accel: FloatArray?, magnetic: FloatArray?): FloatArray {
-//        val inR = FloatArray(16)
-//        val I = FloatArray(16)
-//        val outR = FloatArray(16)
-//        val values = FloatArray(3)
-//        SensorManager.getRotationMatrix(inR, I, accel, magnetic)
-//        SensorManager.remapCoordinateSystem(inR, SensorManager.AXIS_X, SensorManager.AXIS_Y, outR)
-//        SensorManager.getOrientation(outR, values)
-//        return values
-//    }
-
     // 센서를 통해 현재 디바이스 방향 감지
     @RequiresApi(Build.VERSION_CODES.R)
     override fun onSensorChanged(event: SensorEvent) {
-//        val lastComputedTime: Long = 0
-//        if (event.sensor == mAccelerometer) {
-//            System.arraycopy(event.values, 0, mLastAccelerometer, 0, event.values.size)
-//            mLastAccelerometerSet = true
-//        } else if (event.sensor == mMagnetometer) {
-//            System.arraycopy(event.values, 0, mLastMagnetometer, 0, event.values.size)
-//            mLastMagnetometerSet = true
-//        }
-//
-//        if (mLastAccelerometer != null && mLastMagnetometer != null) {
-//            val R = FloatArray(9)
-//            val I = FloatArray(9)
-//            val success = SensorManager.getRotationMatrix(R, I, mLastAccelerometer, mLastMagnetometer)
-//            if (success) {
-//                val orientation = FloatArray(3)
-//                SensorManager.getOrientation(R, orientation)
-//                val azimuth = Math.toDegrees(orientation[0].toDouble()).toFloat()
-//                // 북쪽을 가리키게 하려면 아래의 코드를 사용합니다.
-//                val rotation = (azimuth + 360) % 360
-//                Log.e("seori","$rotation")
-//                // rotation 값을 사용하여 필요한 작업을 수행합니다.
-//                rotateArrow(rotation)
-//            }
-//        }
+        if (event.sensor == mAccelerometer) {
+            System.arraycopy(event.values, 0, mLastAccelerometer, 0, event.values.size)
+        } else if (event.sensor === mMagnetometer) {
+            System.arraycopy(event.values, 0, mLastMagnetometer, 0, event.values.size)
+        }
+
+        SensorManager.getRotationMatrix(R, null, mLastAccelerometer, mLastMagnetometer)
+        SensorManager.getOrientation(R, mOrientationDegrees)
+
+        val azimuth = Math.toDegrees(mOrientationDegrees[0].toDouble()).toFloat()
+        val rotation = -azimuth
+
+        Log.e("rotation","$azimuth")
+
+        // 목적지의 방향을 가리키도록 이미지 회전
+        rotateArrow(rotation + currentFixedAngle)
+        binding.tvDestination.text = "$currentFixedAngle"
     }
 
     override fun onAccuracyChanged(sensor: Sensor?, accuracy: Int) {
@@ -159,16 +137,7 @@ class NavigationActivity : BaseActivity<ActivityNavigationBinding>(ActivityNavig
 
     // Rotate arrow image according to degree
     // 0F -> 앞으로 가는 화살표 / -90F -> 왼쪽 화살표 / 90F -> 오른쪽 화살표 / 180F -> 뒤로 가는 화살표
-    private fun rotateArrow(degreeValue: Float) {
-        // Convert degreeValue to rotateValue
-        var rotateValue = 0F
-        if (degreeValue == 90F) {
-            rotateValue = -90F
-        } else if (degreeValue == 270F) {
-            rotateValue = 90F
-        } else {
-            rotateValue = 0F
-        }
+    private fun rotateArrow(rotateValue: Float) {
         // Rotate image
         val ra = RotateAnimation(
             mCurrentRotateValue,
@@ -242,8 +211,8 @@ class NavigationActivity : BaseActivity<ActivityNavigationBinding>(ActivityNavig
                     showCustomToast("Find a path!")
                     val body = response.body()
                     val path = body?.path
-                    binding.tvDistanceContent.text = "${path?.get(0)?.distance}"
-                    path?.get(0)?.let { rotateArrow(it.angle) }
+                    binding.tvDistanceContent.text = path?.sumOf { it.distance.toDouble() }.toString()
+                    path?.get(0)?.let { currentFixedAngle = it.angle }
 
                     if (body?.image != null && body?.image.isNotBlank()) {
                         var bitmapDecode = stringToBitmap(body?.image)
