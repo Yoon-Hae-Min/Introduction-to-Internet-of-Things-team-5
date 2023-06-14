@@ -17,7 +17,7 @@ interface RetrofitInterface {
     // POST API for path from current location to destination
     @POST("/path")
     fun postPath(
-        @Body postPointRequest: PostPathRequest
+        @Body postPathRequest: PostPathRequest
     ): Call<PostPathResponse>
 
     // GET API for getting destinations list
