@@ -43,9 +43,10 @@ class NavigationActivity : BaseActivity<ActivityNavigationBinding>(ActivityNavig
     private var rssi by Delegates.notNull<Int>()
     private var previousLocation: String = "0"
     private var currentLocation: String = "1"
-    var R = FloatArray(9)
+    private var R = FloatArray(9)
     private lateinit var destination: String
     private var currentFixedAngle: Float = 0F
+    private lateinit var timer: Timer
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -66,7 +67,7 @@ class NavigationActivity : BaseActivity<ActivityNavigationBinding>(ActivityNavig
         mSensorManager?.registerListener(this, mMagnetometer, SensorManager.SENSOR_DELAY_UI)
 
         // Repeat every second to get rssi values
-        val timer = Timer()
+        timer = Timer()
         val timerTask: TimerTask = object : TimerTask() {
             override fun run() {
                 getWifiStrengthPercentage(this@NavigationActivity)
@@ -82,7 +83,6 @@ class NavigationActivity : BaseActivity<ActivityNavigationBinding>(ActivityNavig
         mSensorManager?.unregisterListener(this, mMagnetometer)
     }
 
-    // 센서를 통해 현재 디바이스 방향 감지
     @RequiresApi(Build.VERSION_CODES.R)
     override fun onSensorChanged(event: SensorEvent) {
         if (event.sensor == mAccelerometer) {
@@ -94,6 +94,7 @@ class NavigationActivity : BaseActivity<ActivityNavigationBinding>(ActivityNavig
         SensorManager.getRotationMatrix(R, null, mLastAccelerometer, mLastMagnetometer)
         SensorManager.getOrientation(R, mOrientationDegrees)
 
+        // 센서를 통해 현재 디바이스의 z축 방향(방위각) 감지
         val azimuth = Math.toDegrees(mOrientationDegrees[0].toDouble()).toFloat()
         val rotation = -azimuth
 
@@ -101,7 +102,7 @@ class NavigationActivity : BaseActivity<ActivityNavigationBinding>(ActivityNavig
 
         // 목적지의 방향을 가리키도록 이미지 회전
         rotateArrow(rotation + currentFixedAngle)
-        binding.tvDestination.text = "$currentFixedAngle"
+        Log.d("angle","$currentFixedAngle")
     }
 
     override fun onAccuracyChanged(sensor: Sensor?, accuracy: Int) {
@@ -169,15 +170,13 @@ class NavigationActivity : BaseActivity<ActivityNavigationBinding>(ActivityNavig
 
                     if (currentLocation == destination) {
                         binding.apply {
-                            tvDistanceContent.text = "0.0"
-                            tvDestinationContent.text = "도착!"
-                            tvDestinationContent.setTextColor(Color.BLUE)
+                            tvDistanceContent.text = "0.0m"
+                            // 타이머 종료
+                            timer.cancel()
+                            // 도착 다이얼로그 띄우기
+                            showArrivalDialog()
                         }
                     } else {
-                        binding.apply {
-                            tvDestinationContent.text = destination
-                            tvDestinationContent.setTextColor(Color.BLACK)
-                        }
                         // 위치가 달라졌을 때에만 /path 호출
                         if (previousLocation != currentLocation) {
                             navigatePath(PostPathRequest(currentLocation, destination))
@@ -228,5 +227,11 @@ class NavigationActivity : BaseActivity<ActivityNavigationBinding>(ActivityNavig
 //                showCustomToast("navigatePath 네트워크 연결에 실패했습니다")
             }
         })
+    }
+
+    // Show arrival dialog
+    private fun showArrivalDialog() {
+        ArrivalDialog()
+            .show(this.supportFragmentManager, "ArrivalDialog")
     }
 }
