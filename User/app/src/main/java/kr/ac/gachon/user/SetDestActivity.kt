@@ -66,8 +66,8 @@ class SetDestActivity : BaseActivity<ActivitySetDestBinding>(ActivitySetDestBind
         // Process data to show
         var spinnerDataList = arrayListOf<String>()
         for (data in arr) {
-            if (data.toIntOrNull() != null) {
-                spinnerDataList.add("AI관 - " + data + "호")
+            if (!data.isEmpty()) {
+                spinnerDataList.add(data)
             }
         }
 

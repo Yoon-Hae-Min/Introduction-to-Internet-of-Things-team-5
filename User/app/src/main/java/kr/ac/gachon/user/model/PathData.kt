@@ -8,10 +8,11 @@ data class PostPathRequest(
 
 // Response data class for posting path
 data class PostPathResponse(
+    val image: String,
     val path: ArrayList<PointInfo>,
-    val start_direction: String
+    val start_direction: Float
 )
 data class PointInfo(
-    val distance: Float,
-    val angle: Float
+    val angle: Float,
+    val distance: Float
 )
